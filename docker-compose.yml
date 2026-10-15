@@ -1,0 +1,27 @@
+services:
+  searxng:
+    image: searxng/searxng@sha256:ad273460b12390ab1ad9c6ea630dafed39045ab0b9096a85ca31f5246517c670
+    container_name: searxng
+    restart: unless-stopped
+    volumes:
+      - ./searxng-settings.yml:/etc/searxng/settings.yml:ro
+    networks:
+      - ai
+
+  mcp-search:
+    build: ./mcp
+    container_name: mcp-search
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - SEARXNG_URL=http://searxng:8080
+    ports:
+      - "127.0.0.1:8890:8000"
+    depends_on:
+      - searxng
+    networks:
+      - ai
+
+networks:
+  ai:
+    external: true

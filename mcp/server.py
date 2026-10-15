@@ -1,0 +1,74 @@
+import os, json, datetime, httpx
+from mcp.server.fastmcp import FastMCP
+
+SEARXNG_URL = os.getenv("SEARXNG_URL", "http://searxng:8080")
+SEARXNG_LANG = os.getenv("SEARXNG_LANG", "auto")
+PPLX_KEY = os.getenv("PPLX_API_KEY", "")
+PPLX_DAILY_LIMIT = int(os.getenv("PPLX_DAILY_LIMIT", "50"))
+HOST = os.getenv("MCP_HOST", "0.0.0.0")
+PORT = int(os.getenv("MCP_PORT", "8000"))
+
+mcp = FastMCP("search", host=HOST, port=PORT)
+_pplx = {"day": None, "count": 0}
+
+
+def _searxng(q: str, n: int) -> list[dict]:
+    r = httpx.get(
+        f"{SEARXNG_URL}/search",
+        params={"q": q, "format": "json", "language": SEARXNG_LANG},
+        timeout=10,
+    )
+    r.raise_for_status()
+    out = r.json().get("results", [])[:n]
+    return [
+        {"title": x.get("title"), "url": x.get("url"),
+         "snippet": (x.get("content") or "")[:400]}
+        for x in out
+    ]
+
+
+def _perplexity(q: str, n: int) -> list[dict]:
+    today = datetime.date.today().isoformat()
+    if _pplx["day"] != today:
+        _pplx.update(day=today, count=0)
+    if not PPLX_KEY:
+        raise RuntimeError("brak PPLX_API_KEY")
+    if _pplx["count"] >= PPLX_DAILY_LIMIT:
+        raise RuntimeError("dzienny limit Perplexity wyczerpany")
+    r = httpx.post(
+        "https://api.perplexity.ai/search",
+        headers={"Authorization": f"Bearer {PPLX_KEY}"},
+        json={"query": q, "max_results": n, "search_type": "fast"},
+        timeout=20,
+    )
+    r.raise_for_status()
+    _pplx["count"] += 1
+    return [
+        {"title": x.get("title"), "url": x.get("url"),
+         "snippet": (x.get("snippet") or "")[:400]}
+        for x in r.json().get("results", [])[:n]
+    ]
+
+
+@mcp.tool()
+def web_search(query: str, max_results: int = 5) -> str:
+    """Wyszukaj w internecie. Zwraca JSON: source, results[title,url,snippet]."""
+    n = max(1, min(max_results, 10))
+    errors = []
+    try:
+        res = _searxng(query, n)
+        if res:
+            return json.dumps({"source": "searxng", "results": res}, ensure_ascii=False)
+        errors.append("searxng: pusty wynik")
+    except Exception as e:
+        errors.append(f"searxng: {e}")
+    try:
+        res = _perplexity(query, n)
+        return json.dumps({"source": "perplexity-fast", "results": res}, ensure_ascii=False)
+    except Exception as e:
+        errors.append(f"perplexity: {e}")
+    return json.dumps({"source": None, "results": [], "errors": errors}, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http")

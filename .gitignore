@@ -1,0 +1,73 @@
+# Lokalne dane robocze repozytorium
+.local/
+
+# Środowisko i sekrety
+.env
+.env.*
+!.env.example
+!.env.dist
+!.env.test.example
+!.env.testing.example
+.env.keys
+.env.keys.*
+*.env.keys
+
+# Klucze i certyfikaty
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.crt
+*.cer
+
+# Lokalna baza, logi i runtime
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.log
+logs/
+storage/logs/
+
+# System i edytory
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# PHP / Composer
+/vendor/
+.phpunit.result.cache
+.clover/
+
+# Node.js
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
