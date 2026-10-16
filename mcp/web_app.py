@@ -1,10 +1,12 @@
 """Same-origin web UI and JSON adapter for the existing MCP search service."""
 
 import json
+import os
 from pathlib import Path
 
 import uvicorn
 from starlette.concurrency import run_in_threadpool
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
@@ -13,7 +15,7 @@ from starlette.staticfiles import StaticFiles
 from server import HOST, PORT, mcp, web_search
 
 
-def create_app(search_service=web_search, static_dir=None):
+def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
     assets = Path(static_dir) if static_dir else Path(__file__).resolve().parent / "static"
 
     async def search_endpoint(request: Request):
@@ -67,6 +69,13 @@ def create_app(search_service=web_search, static_dir=None):
 
     # Reuse FastMCP's application, including its existing session-manager lifespan.
     app = mcp.streamable_http_app()
+    trusted_hosts = allowed_hosts if allowed_hosts is not None else [
+        host.strip() for host in os.getenv(
+            "SEARCH_ALLOWED_HOSTS", "127.0.0.1,localhost,mcp-search"
+        ).split(",") if host.strip()
+    ]
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts,
+                       www_redirect=False)
     app.router.routes[0:0] = [
         Route("/", index),
         Route("/favicon.svg", favicon),

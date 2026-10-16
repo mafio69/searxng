@@ -22,13 +22,37 @@ class WebAppTests(unittest.TestCase):
         self.service = Mock(return_value=json.dumps({
             "source": "searxng", "results": [{"title": "Example", "url": "https://example.org", "snippet": "Text"}],
         }))
-        self.client = TestClient(create_app(self.service))
+        self.client = TestClient(create_app(self.service, allowed_hosts=["testserver"]))
 
     def test_adapter_uses_shared_service_and_trims_query(self):
         response = self.client.post("/api/search", json={"query": "  test  ", "max_results": 5})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["source"], "searxng")
         self.service.assert_called_once_with("test", 5)
+
+    def test_matching_untrusted_host_and_origin_are_rejected(self):
+        response = self.client.post("/api/search", json={"query": "test"}, headers={
+            "Host": "attacker.example:8890", "Origin": "http://attacker.example:8890",
+            "Sec-Fetch-Site": "same-origin"})
+        self.assertEqual(response.status_code, 400)
+        self.service.assert_not_called()
+
+    def test_extra_trusted_host_requires_explicit_configuration(self):
+        with patch.dict("os.environ", {"SEARCH_ALLOWED_HOSTS": "127.0.0.1, mcp-search, 192.168.1.172"}):
+            client = TestClient(create_app(self.service))
+        self.assertEqual(client.post("/api/search", json={"query": "test"},
+                                     headers={"Host": "192.168.1.172:8890"}).status_code, 200)
+        self.assertEqual(client.post("/api/search", json={"query": "test"},
+                                     headers={"Host": "attacker.example"}).status_code, 400)
+
+    def test_default_hosts_preserve_docker_client_access(self):
+        with patch.dict("os.environ", {}, clear=True):
+            client = TestClient(create_app(self.service))
+        for host in ("mcp-search:8000", "localhost:8890", "127.0.0.1:8890"):
+            with self.subTest(host=host):
+                response = client.post("/api/search", json={"query": "test"},
+                                       headers={"Host": host, "Origin": "http://" + host})
+                self.assertEqual(response.status_code, 200)
 
     def test_validation_prevents_provider_calls(self):
         for body in [[], {}, {"query": " "}, {"query": "x" * 501}, {"query": "test", "max_results": True},
@@ -68,7 +92,7 @@ class WebAppTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1] / ".local" / "tmp"
         root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=root) as directory:
-            client = TestClient(create_app(self.service, directory))
+            client = TestClient(create_app(self.service, directory, allowed_hosts=["testserver"]))
             response = client.get("/")
             self.assertEqual(response.status_code, 503)
             self.assertIn("README.md", response.json()["error"])
@@ -90,7 +114,7 @@ class WebAppTests(unittest.TestCase):
             (static / "assets").mkdir()
             (static / "index.html").write_text("<title>Search UI</title>")
             (static / "assets" / "app.js").write_text("console.log('test')")
-            with TestClient(create_app(self.service, static)) as client:
+            with TestClient(create_app(self.service, static, allowed_hosts=["testserver"])) as client:
                 self.assertIn("Search UI", client.get("/").text)
                 self.assertEqual(client.get("/assets/app.js").status_code, 200)
                 response = client.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
@@ -118,7 +142,7 @@ class SmokeTests(unittest.TestCase):
             (static / "index.html").write_text('<div id="root"></div><script src="/assets/app.js"></script>')
             (static / "assets" / "app.js").write_text("// frontend")
             (static / "favicon.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
-            with TestClient(create_app(service, static)) as client:
+            with TestClient(create_app(service, static, allowed_hosts=["testserver"])) as client:
                 smoke = SmokeTest("http://testserver")
 
                 def request(path, payload=None, expected=200, headers=None):

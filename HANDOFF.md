@@ -1,6 +1,15 @@
 # HANDOFF.md — pałeczka między sesjami
 
-## Aktualne przekazanie — 2026-10-16
+## Aktualne przekazanie — 2026-10-17
+
+- Poprawki PR #1: niezależna lista zaufanych hostów (TrustedHostMiddleware), brak awarii dla `https://www./`, fokus/trap klawiatury mobilnej historii i wyłączenie ukrytego panelu z interakcji/drzewa dostępności.
+- Mariusz zabronił zmian wyglądu: kolory, układ i typografia zachowane. Uwaga review o kontraście celowo pozostaje otwarta. CSS zmienia wyłącznie visibility zamkniętego panelu mobilnego.
+- `SEARCH_ALLOWED_HOSTS`: domyślnie `127.0.0.1,localhost,mcp-search`; własne IP/domeny wymagają jawnego wpisu. Nazwy bez portów, nie stosować wildcardu.
+- Kontrole po poprawkach: backend 20/20, frontend 17/17, build Vite, diff check i smoke nowego kodu na porcie 8891 — PASS. Testowy serwer zatrzymano. Kontenerów nie przebudowywano.
+- Zgoda Mariusza na commit i push poprawek review na `feat/search-ui`. Nie obejmuje wdrożenia.
+- `tests/http/server-diagnostic.http` pozostaje osobnym, niezacommitowanym plikiem z wcześniejszej diagnostyki PhpStorm; nie dodawać go do commita poprawek review.
+
+## Poprzednie przekazanie — 2026-10-16
 
 - Mariusz określił obecny zakres jako **MVP 1.0**. Zadanie: stabilizacja bez nowych funkcji.
 - Gałąź `feat/search-ui`, zastane niezacommitowane zmiany zachowane. Zgoda Mariusza: agent sam wykonuje commit po zielonych kontrolach; push dopiero na osobne polecenie. Bez zmiany polityk.

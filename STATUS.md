@@ -1,6 +1,6 @@
 # STATUS.md
 
-Aktualizacja: 2026-10-16
+Aktualizacja: 2026-10-17
 
 ## Stan projektu
 
@@ -10,11 +10,18 @@ Aktualizacja: 2026-10-16
 
 ## Weryfikacja
 
-- Backend: **17/17 testów** (walidacja, fallback, limity, MCP tools/call z atrapami).
-- Frontend: **13/13 testów** (wyszukiwanie, historia, błędy i spóźnione odpowiedzi).
+- Backend: **20/20 testów** (walidacja, fallback, limity, MCP tools/call z atrapami).
+- Frontend: **17/17 testów** (wyszukiwanie, historia, błędy i spóźnione odpowiedzi).
 - Build Vite i `git diff --check`: PASS.
 - Smoke HTTP działającego obrazu: PASS. Najnowsze poprawki kodu nie zostały jeszcze wdrożone.
 - Mariusz potwierdził działające wyszukiwanie w przeglądarce. Agent nie wykonywał rzeczywistych zapytań podczas stabilizacji.
+
+## Poprawki review
+
+- Naprawiono walidację Host, nietypowy URL i dostęp klawiaturą do mobilnej historii.
+- Smoke najnowszego kodu na testowym porcie 8891: PASS; kontenery wymagają przebudowania po poprawkach.
+- Wygląd zachowany na polecenie Mariusza. Uwaga o niskim kontraście pozostaje otwarta.
+- Push poprawek review jest autoryzowany w bieżącym zadaniu.
 
 ## Decyzje i ograniczenia
 

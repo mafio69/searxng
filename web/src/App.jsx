@@ -12,9 +12,10 @@ const ideas = [
 function Result({ result, index }) {
   const url = safeUrl(result.url);
   if (!url) return null;
+  const siteName = url.hostname.replace(/^www\./, '') || url.hostname;
   return <article className="result" style={{ '--order': index }}>
-    <div className="result-site"><span className="site-symbol">{url.hostname.replace(/^www\./, '')[0].toUpperCase()}</span>
-      <div><span className="site-name">{url.hostname.replace(/^www\./, '')}</span><span className="site-path">{url.pathname === '/' ? 'Strona główna' : url.pathname.slice(0, 75)}</span></div>
+    <div className="result-site"><span className="site-symbol">{(siteName[0] || '?').toUpperCase()}</span>
+      <div><span className="site-name">{siteName}</span><span className="site-path">{url.pathname === '/' ? 'Strona główna' : url.pathname.slice(0, 75)}</span></div>
     </div>
     <a className="result-title" href={url.href} target="_blank" rel="noopener noreferrer">{result.title || url.hostname}<Icon name="external" size={17} /></a>
     <p>{result.snippet || 'Ta strona nie udostępnia opisu. Otwórz ją, aby dowiedzieć się więcej.'}</p>
@@ -34,15 +35,44 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [mobile, setMobile] = useState(() => window.matchMedia?.('(max-width: 760px)').matches ?? false);
+  const sidebar = useRef(null);
+  const menuButton = useRef(null);
+  const returnFocus = useRef(null);
+  const mobileOpen = mobile && sidebarOpen;
   const input = useRef(null);
   const request = useRef(null);
   const requestId = useRef(0);
 
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => {
+    const media = window.matchMedia?.('(max-width: 760px)');
+    if (!media) return;
+    const changed = () => { setMobile(media.matches); setSidebarOpen(false); };
+    media.addEventListener('change', changed);
+    return () => media.removeEventListener('change', changed);
+  }, []);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    returnFocus.current = menuButton.current;
+    sidebar.current.querySelector('button')?.focus();
+    const trap = event => {
+      if (event.key !== 'Tab') return;
+      const buttons = [...sidebar.current.querySelectorAll('button:not(:disabled), a[href], input, select')];
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    window.addEventListener('keydown', trap);
+    return () => {
+      window.removeEventListener('keydown', trap);
+      returnFocus.current?.focus();
+    };
+  }, [mobileOpen]);
+  useEffect(() => {
     const shortcut = event => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault(); input.current?.focus();
+        event.preventDefault(); returnFocus.current = input.current; setSidebarOpen(false); input.current?.focus();
       }
       if (event.key === 'Escape') setSidebarOpen(false);
     };
@@ -64,7 +94,7 @@ export default function App() {
     request.current = controller;
     const timeout = window.setTimeout(() => controller.abort(), 60000);
     setQuery(normalized); setSearched(normalized); setLoading(true);
-    setData(null); setError(''); setSidebarOpen(false);
+    setData(null); setError(''); returnFocus.current = input.current; setSidebarOpen(false);
     if (!privateMode) saveHistory(remember(history, normalized));
     const started = performance.now();
     try {
@@ -84,7 +114,7 @@ export default function App() {
   function resetSearch() {
     requestId.current += 1; request.current?.abort();
     setQuery(''); setSearched(''); setData(null); setError(''); setLoading(false);
-    setSidebarOpen(false); input.current?.focus();
+    returnFocus.current = input.current; setSidebarOpen(false); input.current?.focus();
   }
 
   const results = data?.results.filter(result => safeUrl(result.url)) || [];
@@ -92,7 +122,7 @@ export default function App() {
   return <div className="app-shell">
     <a className="skip-link" href="#main">Przejdź do wyszukiwarki</a>
     {sidebarOpen && <button className="sidebar-backdrop" aria-label="Zamknij historię" onClick={() => setSidebarOpen(false)} />}
-    <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-label="Historia wyszukiwania">
+    <aside ref={sidebar} id="search-history" inert={mobile && !sidebarOpen} role={mobileOpen ? 'dialog' : undefined} aria-modal={mobileOpen ? true : undefined} className={`sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-label="Historia wyszukiwania">
       <button className="brand" onClick={resetSearch} aria-label="Szukaj — strona główna"><span className="brand-mark"><Icon name="search" size={24} /></span><span>szukaj<span className="brand-dot">.</span></span></button>
       <button className="new-search" onClick={resetSearch}><Icon name="plus" size={18} /> Nowe wyszukiwanie <kbd>⌘ / Ctrl K</kbd></button>
       <div className="history-heading"><span>TWOJA HISTORIA</span><Icon name="clock" size={15} /></div>
@@ -112,8 +142,8 @@ export default function App() {
       </div>
     </aside>
 
-    <div className="workspace">
-      <header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" aria-label="Otwórz historię" onClick={() => setSidebarOpen(true)}><Icon name="menu" /></button><span className="breadcrumb">Wyszukiwarka <span>/</span> <strong>{searched ? 'Wyniki' : 'Odkrywaj'}</strong></span></div><span className="engine-badge"><span className="tiny-dot" /> SearXNG + Perplexity</span></header>
+    <div className="workspace" inert={mobileOpen}>
+      <header className="topbar"><div className="topbar-left"><button ref={menuButton} aria-expanded={mobileOpen} aria-controls="search-history" className="icon-button mobile-menu" aria-label="Otwórz historię" onClick={() => setSidebarOpen(true)}><Icon name="menu" /></button><span className="breadcrumb">Wyszukiwarka <span>/</span> <strong>{searched ? 'Wyniki' : 'Odkrywaj'}</strong></span></div><span className="engine-badge"><span className="tiny-dot" /> SearXNG + Perplexity</span></header>
       <main id="main" className={searched ? 'main-content has-results' : 'main-content'}>
         {!searched && <section className="hero"><div className="eyebrow"><span className="eyebrow-line" /> MNIEJ SZUMU. WIĘCEJ ODKRYĆ.</div><h1>Ciekawość to<br />dobry <span>początek<svg viewBox="0 0 390 20" aria-hidden="true"><path d="M4 14 Q160 -1 385 10" /></svg></span>.</h1><p>Wielki internet. Twoje pytania.<br className="mobile-break" /> Znajdź to, czego szukasz.</p></section>}
         <section className="search-section" aria-label="Wyszukiwarka">

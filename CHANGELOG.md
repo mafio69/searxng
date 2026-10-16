@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Poprawki code review — 2026-10-17
+- Ochrona Host niezależną listą `SEARCH_ALLOWED_HOSTS`; test odrzucenia zgodnych, ale obcych nagłówków Host/Origin i zachowania dostępu Docker.
+- Usunięto awarię renderowania wyniku z adresem `https://www./`.
+- Poprawiono fokus mobilnej historii: wejście do panelu, Tab/Shift+Tab, Escape, powrót do przycisku lub wyszukiwarki. Zamknięty panel wyłączono z interakcji i drzewa dostępności.
+- Zachowano wygląd na polecenie Mariusza; uwaga review o kontraście nie jest realizowana.
+- Kontrole: backend 20/20, frontend 17/17, build i smoke nowego kodu — PASS.
+
 ### MVP 1.0 stabilization — 2026-10-16
 - Preserved valid history entries when storage contains null items.
 - Rejected malformed search responses with controlled API/UI errors instead of crashes.

@@ -64,6 +64,14 @@ describe('search application', () => {
     await screen.findByRole('link', { name: /Wynik testowy/ });
   });
 
+  it('renders a hostname consisting only of www. without crashing', async () => {
+    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ source: 'searxng',
+      results: [{ title: 'Unusual host', url: 'https://www./', snippet: 'Text' }] }) });
+    render(<App />); await submit();
+    expect((await screen.findByRole('link', { name: /Unusual host/ })).getAttribute('href')).toBe('https://www./');
+    expect(screen.getByText('www.')).toBeTruthy();
+  });
+
   it('handles empty results and hides unsafe result URLs', async () => {
     fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ source: 'searxng', results: [{ title: 'unsafe', url: 'javascript:alert(1)' }] }) });
     render(<App />); await submit();
@@ -114,5 +122,51 @@ describe('history integrity', () => {
     entries = remember(entries, 'QUERY 39', 50);
     expect(entries).toHaveLength(30);
     expect(entries[0]).toEqual({ query: 'QUERY 39', time: 50 });
+  });
+});
+
+
+describe('mobile history keyboard access', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify([{ query: 'Pomorze', time: 1 }]));
+  });
+
+  it('hides a closed panel, traps focus when open and restores it on Escape', async () => {
+    render(<App />);
+    const user = userEvent.setup();
+    const panel = document.getElementById('search-history');
+    expect(panel.hasAttribute('inert')).toBe(true);
+    const opener = screen.getByRole('button', { name: 'Otwórz historię' });
+    await user.click(opener);
+    expect(panel.hasAttribute('inert')).toBe(false);
+    expect(panel.getAttribute('aria-modal')).toBe('true');
+    const first = screen.getByRole('button', { name: 'Szukaj — strona główna' });
+    expect(document.activeElement).toBe(first);
+    expect(document.querySelector('.workspace').hasAttribute('inert')).toBe(true);
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /Wyczyść historię/ }));
+    await user.tab();
+    expect(document.activeElement).toBe(first);
+    await user.keyboard('{Escape}');
+    expect(document.activeElement).toBe(opener);
+    expect(panel.hasAttribute('inert')).toBe(true);
+    expect(document.querySelector('.workspace').hasAttribute('inert')).toBe(false);
+  });
+
+  it('returns focus to the opener after backdrop dismissal', async () => {
+    render(<App />); const user = userEvent.setup();
+    const opener = screen.getByRole('button', { name: 'Otwórz historię' });
+    await user.click(opener);
+    await user.click(screen.getByRole('button', { name: 'Zamknij historię' }));
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it('focuses the search input after selecting a history entry', async () => {
+    render(<App />); const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Otwórz historię' }));
+    await user.click(screen.getByRole('button', { name: 'Pomorze', exact: true }));
+    await screen.findByRole('link', { name: /Wynik testowy/ });
+    expect(document.activeElement).toBe(screen.getByLabelText('Czego szukasz?'));
   });
 });

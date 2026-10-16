@@ -40,6 +40,7 @@ Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG m
 | `PPLX_API_KEY` | Opcjonalny klucz Perplexity; brak uniemożliwia użycie źródła awaryjnego |
 | `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit odpowiedzi Perplexity zliczanych w procesie |
 | `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania |
+| `SEARCH_ALLOWED_HOSTS` | Zaufane nazwy hostów oddzielone przecinkami; domyślnie `127.0.0.1,localhost,mcp-search`. Przy własnym adresie LAN/domenie dodaj go jawnie, zachowując potrzebne dotychczasowe nazwy. Nie używaj `*`. |
 | `SEARCH_PORT` | Domyślnie `8890`; port publikowany na hoście |
 | `SEARCH_BIND_ADDRESS` | Domyślnie `127.0.0.1`; adres nasłuchiwania na hoście |
 
