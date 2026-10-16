@@ -1,28 +1,31 @@
-# CHANGELOG.md
+# Changelog
 
-> Historia zmian jest append-only. Nie usuwaj starych wpisów; korektę zapisuj nowym wpisem. Najnowszy wpis umieszczaj pod tą instrukcją.
+All notable changes to this project will be documented in this file.
 
-## Format wpisu
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-```markdown
-## YYYY-MM-DD — autor/model — krótki tytuł
+## [Unreleased]
 
-### Dodane
-- ...
+### MVP 1.0 stabilization — 2026-10-16
+- Preserved valid history entries when storage contains null items.
+- Rejected malformed search responses with controlled API/UI errors instead of crashes.
+- Corrected the missing-frontend help reference to README.
+- Verified 17 backend tests, 13 frontend tests, production frontend build and the running deployment smoke test. Latest fixes still require rebuilding the Docker image.
 
-### Zmienione
-- ...
+### Added
+- Dependency-free Python deployment smoke test for frontend assets, API validation and MCP initialization/tool discovery, with optional live search.
+- Backend tests for provider limits, daily reset, failed HTTP requests, fallback and the smoke flow; isolated MCP instances between tests.
 
-### Naprawione
-- ...
+### Fixed
+- Added the missing `web/package-lock.json` required by the Docker frontend build and `npm ci`. Verified npm ci, all 7 frontend tests, and the production frontend build.
 
-### Bezpieczeństwo
-- ...
-```
+## [0.1.0] - 2026-10-16
 
----
+### Added
+- **MCP Search Server**: Python FastMCP server (`mcp/server.py`) providing the `web_search` tool with SearXNG querying and fallback to Perplexity API ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **Docker Compose Stack**: Containerized deployment (`docker-compose.yml`) containing SearXNG and MCP search services attached to the external `ai` network ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **SearXNG Engine Settings**: Configuration (`searxng-settings.yml`) with JSON API response format enabled and rate limiter disabled ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **Project Documentation & AI Policies**: Core documentation (`README.md`, `REPO.md`, `docs/INSTRUKCJA.md`), environment configuration template (`.env.example`), AI agent policies (`AGENTS.md`, `GIT-FLOW.md`), and session tracking templates (`STATUS.md`, `HANDOFF.md`) ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
 
-## YYYY-MM-DD — inicjalizacja repozytorium
-
-### Dodane
-- Starter Pack dokumentacji i polityk repozytorium.
+[0.1.0]: https://github.com/mafio69/searxng/releases/tag/v0.1.0

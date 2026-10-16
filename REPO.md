@@ -1,80 +1,47 @@
-# REPO.md — mapa techniczna repozytorium
+# REPO.md — mapa techniczna
 
-> **Cel:** skrócić wejście w projekt. Zapisuj tu tylko trwałe fakty: architekturę, sposób uruchamiania, istotne mechanizmy, świadome decyzje i pułapki. Dzięki temu agent lub programista nie musi ponownie przeszukiwać kodu ani powtarzać starych błędów.
->
-> To nie jest instrukcja polityk ani dziennik prac: zasady pracy są w `AGENTS.md` / `GIT-FLOW.md`, bieżący stan w `STATUS.md`, przekazanie sesji w `HANDOFF.md`, a historia zmian w `CHANGELOG.md`.
+## Przeznaczenie i architektura
 
-## 1. Przeznaczenie
-
-- **Problem rozwiązywany:** [jedno zdanie]
-- **Główni użytkownicy:** [kto]
-- **Najważniejszy przepływ:** [wejście → przetworzenie → wynik]
-- **Granice systemu:** [co świadomie nie należy do tego repozytorium]
-
-## 2. Uruchamianie
-
-| Cel | Polecenie | Istotna uwaga |
-|---|---|---|
-| Instalacja | `[komenda]` | `[warunek / wersja]` |
-| Development | `[komenda]` | `[port, URL, zachowanie watch/HMR]` |
-| Pełne środowisko | `dxrun -- [komenda]` | Używaj dla procesów wymagających zmiennych środowiskowych |
-| Testy kompletne | `[komenda]` | Musi przejść przed commitem |
-| Build | `[komenda]` | `[gdzie jest wynik]` |
-| Produkcja | `[komenda lub procedura]` | `[wyłącznie faktycznie dozwolony sposób]` |
-
-Nie wpisuj tu sekretów, prywatnych kluczy ani ich ścieżek. Opisz jedynie bezpieczny sposób uruchomienia, np. `dxrun -- [komenda]`.
-
-## 3. Architektura
+MVP 1.0: wyszukiwanie dla użytkowników przeglądarki i klientów MCP. Bez generowania odpowiedzi modelem i bez pobierania pełnej treści stron.
 
 ```text
-[klient / CLI / integracja]
-        ↓
-[punkt wejścia / API / worker]
-        ↓
-[domena / usługi]
-        ↓
-[baza / pliki / zewnętrzne API]
+React → POST /api/search ─┐
+                         ├→ web_search → SearXNG → opcjonalnie Perplexity
+Klient MCP → /mcp ────────┘
 ```
 
-| Obszar | Lokalizacja | Odpowiedzialność |
+| Obszar | Plik / katalog | Odpowiedzialność |
 |---|---|---|
-| Wejście aplikacji | `[plik/katalog]` | `[co inicjuje]` |
-| Interfejs / API | `[plik/katalog]` | `[co obsługuje]` |
-| Logika domenowa | `[plik/katalog]` | `[reguły biznesowe]` |
-| Dane | `[plik/katalog]` | `[źródło danych i trwałość]` |
-| Integracje | `[plik/katalog]` | `[z czym i w jakim celu]` |
-| Testy | `[plik/katalog]` | `[zakres]` |
+| Wyszukiwanie | `mcp/server.py` | FastMCP v1, dostawcy, fallback, limit liczby wyników |
+| HTTP i frontend | `mcp/web_app.py` | Starlette/Uvicorn, walidacja API, pliki statyczne, transport MCP |
+| UI | `web/src/App.jsx` | Wyszukiwanie, stany UI, anulowanie i odrzucanie spóźnionych odpowiedzi |
+| Klient API | `web/src/api.js` | Żądania, kontrola struktury odpowiedzi, dozwolone URL HTTP/HTTPS |
+| Historia | `web/src/storage.js` | localStorage, maksymalnie 30 zapytań, deduplikacja przy zapisie |
+| Backend tests | `tests/test_web_app.py` | unittest, TestClient, atrapy dostawców |
+| Frontend tests | `web/src/App.test.jsx` | Vitest, Testing Library, atrapa fetch |
+| Smoke | `scripts/smoke_test.py` | Standardowa biblioteka Pythona, kontrola uruchomionej aplikacji |
 
-## 4. Mechanizmy krytyczne
+## Uruchamianie i kontrole
 
-Zapisuj tylko rzeczy, których nie widać od razu po nazwie pliku i których błędne zrozumienie powoduje błąd.
+- Docker Compose buduje frontend na Node.js 24 i backend na Pythonie 3.12. Lokalny frontend wymaga Node.js >=22.12.
+- `docker-compose.yml` wymaga istniejącej sieci `ai` i lokalnego `.env`; bez Perplexity plik może być pusty.
+- Start: `docker compose up -d --build`. Przy wymaganym sudo polecenie wykonuje operator.
+- Web: `http://127.0.0.1:8890/`. MCP na hoście: `http://127.0.0.1:8890/mcp`; w sieci `ai`: `http://mcp-search:8000/mcp`.
+- Testy backendu po instalacji `mcp/requirements.txt`: `python3 -m unittest discover -s tests -v`.
+- Testy i build frontendu po `npm --prefix web ci`: `npm --prefix web test`, `npm --prefix web run build`.
+- Kontrola zmian: `git diff --check`.
+- Smoke: `python3 scripts/smoke_test.py`; opcja `--query` wykonuje rzeczywiste wyszukiwanie i może użyć płatnego Perplexity.
+- Development UI: `npm --prefix web run dev`, proxy `/api` do backendu na porcie 8890.
+- W repo nie używamy `dxrun` — decyzja Mariusza.
 
-| Mechanizm | Jak działa | Gdzie szukać |
-|---|---|---|
-| `[np. autoryzacja]` | `[krótki przebieg i warunek sukcesu]` | `[plik/moduł]` |
-| `[np. kolejka]` | `[kiedy zapis, retry, sukces]` | `[plik/moduł]` |
-| `[np. stan runtime]` | `[co przetrwa restart, co nie]` | `[katalog/moduł]` |
-| `[np. integracja]` | `[granica odpowiedzialności]` | `[plik/moduł]` |
+## Mechanizmy i ograniczenia
 
-## 5. Decyzje i pułapki
-
-| Temat | Przyjęte rozwiązanie | Dlaczego / czego nie robić |
-|---|---|---|
-| `[np. konfiguracja]` | `[konkret]` | `[typowy błąd i skutek]` |
-| `[np. dane]` | `[konkret]` | `[ograniczenie lub ryzyko]` |
-| `[np. uruchamianie]` | `[konkret]` | `[co nie zadziała]` |
-| `[np. Git/deploy]` | `[konkret]` | `[czego nie usuwać / nie omijać]` |
-
-Dodaj wpis tutaj dopiero, gdy informacja jest trwała, zweryfikowana i oszczędzi kolejnym osobom realnego szukania lub awarii.
-
-## 6. Stałe operacyjne
-
-- **Porty / endpointy publiczne:** `[tylko niejawne adresy i porty]`
-- **Limity / timeouty / retry:** `[wartość + miejsce definicji]`
-- **Dane runtime:** `[lokalizacja, czy są wersjonowane, czy przetrwają restart]`
-- **Języki / formaty / konwencje UI:** `[tylko istotne wyjątki]`
-- **Zależności infrastrukturalne:** `[wymagane usługi bez danych dostępowych]`
-
-## Aktualizacja
-
-Aktualizuj `REPO.md` w tym samym commicie, gdy zmienia się architektura, uruchamianie, trwały mechanizm, limit, struktura katalogów albo znana pułapka. Nie wpisuj statusu zadania, doraźnych obejść ani sekretów.
+- MCP używa Streamable HTTP; inicjalizacja i sesja są wymagane. Wynik narzędzia jest tekstem JSON. Kontrakt: `docs/MCP-USAGE.md`.
+- `web_search` ogranicza wynik do 1–10 pozycji, fragment do 400 znaków. Timeouty HTTP: SearXNG 10 s, Perplexity 20 s.
+- Perplexity uruchamia się wyłącznie po pustym wyniku/błędzie SearXNG. Domyślny licznik 50 dziennie jest w pamięci, resetuje się po restarcie/zmianie daty i nie jest synchronizowany między równoległymi wywołaniami.
+- Przeglądarkowe API wymaga application/json, zapytania do 500 znaków, limitu 1–10, odrzuca żądania cross-site i body powyżej 4096 bajtów. Nie ujawnia szczegółów błędów dostawców.
+- Historia jest wyłącznie w localStorage. Wyłączenie historii nie blokuje przekazania zapytania do backendu i wyszukiwarek.
+- Aplikacja nie ma logowania; port hosta domyślnie dostępny tylko przez loopback. Sieć `ai` daje dostęp innym podłączonym kontenerom.
+- `python mcp/server.py` uruchamia samo MCP; pełna aplikacja startuje przez `mcp/web_app.py`. Frontend jest kopiowany do obrazu podczas budowania.
+- FastMCP session manager uruchamia się raz na instancję; testy aplikacji izolują instancje MCP.
+- Dane robocze/cache/testy tymczasowe trafiają do ignorowanego `.local/`; nie czytać `.local/secret/`.
