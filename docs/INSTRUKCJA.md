@@ -128,8 +128,8 @@ docker exec mcp-search python -c "import httpx; print(len(httpx.get('http://sear
 
 ## Pliki w projekcie
 
-- `docker-compose.yml` — definicja obu usług
-- `searxng-settings.yml` — ustawienia SearXNG (włączony format JSON, wyłączony rate-limiter)
-- `mcp/server.py` — kod serwera MCP (narzędzie `web_search`)
-- `mcp/requirements.txt` — zależności (`mcp` przypięty do `<2` — nie podnosić, kod używa API v1)
+- `../docker-compose.yml` — definicja obu usług
+- `../searxng-settings.yml` — ustawienia SearXNG (włączony format JSON, wyłączony rate-limiter)
+- `../mcp/server.py` — kod serwera MCP (narzędzie `web_search`)
+- `../mcp/requirements.txt` — zależności (`mcp` przypięty do `<2` — nie podnosić, kod używa API v1)
 - `.env` — sekrety (`PPLX_API_KEY`); nigdy nie commitować
