@@ -1,6 +1,15 @@
 # HANDOFF.md — pałeczka między sesjami
 
-## Aktualne przekazanie — 2026-10-17
+## Koniec sesji — 2026-10-17
+
+- Poprawki review zapisane w commicie `d5336b6` i wysłane na `origin/feat/search-ui`, PR #1. Brak merge i wdrożenia.
+- Ostateczna decyzja Mariusza: obecny wygląd ma pozostać, także kontrast. Nie zmieniać kolorów, typografii ani układu. Uwaga review o kontraście jest świadomie nieprzyjęta.
+- Rzeczywiste MCP z hosta działało: „SearXNG documentation” — 3 wyniki w 0,78 s; „Najważniejsze wydarzenia tygodnia w IT” — 5 wyników w 1,6 s. Źródło SearXNG, bez błędów i bez Perplexity.
+- Nierozwiązane zgłoszenie VirralAI: PHP w `slim_ovh_ai_app` zwracało `dns_failed` dla `http://mcp-search:8000/mcp`. Mariusz potwierdził, że oba kontenery są na Latitude. Trzeba potwierdzić wspólną sieć `ai` i alias `mcp-search`; wynik poprawnego inspect nie został dostarczony. Nie potwierdzono wpływu Pi-hole ani naprawy integracji.
+- Nie wykonywać pracy na Optiplexie ani poza bieżącym repo. Wklejony prompt dotyczący `/home/mariusz/app/searxng` nie został wykonany.
+- Zakończenie sesji obejmuje tylko HANDOFF, CHANGELOG i STATUS. Lokalny commit dokumentacji; bez kolejnego pushu. Zachować niezacommitowany `tests/http/server-diagnostic.http`.
+
+## Szczegóły poprawek — 2026-10-17
 
 - Poprawki PR #1: niezależna lista zaufanych hostów (TrustedHostMiddleware), brak awarii dla `https://www./`, fokus/trap klawiatury mobilnej historii i wyłączenie ukrytego panelu z interakcji/drzewa dostępności.
 - Mariusz zabronił zmian wyglądu: kolory, układ i typografia zachowane. Uwaga review o kontraście celowo pozostaje otwarta. CSS zmienia wyłącznie visibility zamkniętego panelu mobilnego.

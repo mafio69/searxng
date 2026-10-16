@@ -20,8 +20,8 @@ Aktualizacja: 2026-10-17
 
 - Naprawiono walidację Host, nietypowy URL i dostęp klawiaturą do mobilnej historii.
 - Smoke najnowszego kodu na testowym porcie 8891: PASS; kontenery wymagają przebudowania po poprawkach.
-- Wygląd zachowany na polecenie Mariusza. Uwaga o niskim kontraście pozostaje otwarta.
-- Push poprawek review jest autoryzowany w bieżącym zadaniu.
+- Ostateczna decyzja Mariusza: zachować obecny wygląd, w tym kontrast. Uwaga o kontraście świadomie nieprzyjęta.
+- Commit `d5336b6` wysłany do PR #1 na GitHub; bez merge i wdrożenia.
 
 ## Decyzje i ograniczenia
 
@@ -32,8 +32,15 @@ Aktualizacja: 2026-10-17
 - Ostrzeżenie deprecacji Starlette TestClient/HTTPX nie blokuje testów; nie zmieniano zależności.
 - Lokalnie brak `origin/develop`; praca na `feat/search-ui`. Agent ma zgodę na commit po zielonych testach; push czeka na osobne polecenie.
 
+## Stan na koniec sesji
+
+- Rzeczywiste MCP z hosta zwraca wyniki SearXNG (3 w 0,78 s i 5 w 1,6 s), bez Perplexity.
+- VirralAI w kontenerze `slim_ovh_ai_app` zgłaszało `dns_failed` dla `mcp-search:8000`; nie potwierdzono jeszcze wspólnej sieci i aliasu. Oba kontenery według Mariusza działają na Latitude.
+- `tests/http/server-diagnostic.http` pozostaje niezacommitowanym plikiem diagnostycznym.
+- Końcowy zapis dokumentacji zostaje lokalnie; kolejny push wymaga polecenia.
+
 ## Następny krok
 
 1. Przebudować obraz po poprawkach: `sudo docker compose up -d --build`.
 2. Powtórzyć `python3 scripts/smoke_test.py` i próbę w przeglądarce.
-3. Przed publikacją zweryfikować integrację z wybranym klientem AI.
+3. Zweryfikować sieci i aliasy `slim_ovh_ai_app` oraz `mcp-search`, a potem inicjalizację MCP z PHP; nie traktować problemu DNS jako naprawionego.

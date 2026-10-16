@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Zamknięcie sesji — 2026-10-17
+- Poprawki review wysłano na GitHub w commicie `d5336b6` (PR #1); bez merge i wdrożenia.
+- Zapisano ostateczną decyzję o zachowaniu obecnego wyglądu i świadomym nieprzyjęciu uwagi o kontraście.
+- Potwierdzono rzeczywiste wyszukiwanie MCP z hosta przez SearXNG; problem DNS klienta VirralAI w kontenerze pozostaje do zdiagnozowania.
+
 ### Poprawki code review — 2026-10-17
 - Ochrona Host niezależną listą `SEARCH_ALLOWED_HOSTS`; test odrzucenia zgodnych, ale obcych nagłówków Host/Origin i zachowania dostępu Docker.
 - Usunięto awarię renderowania wyniku z adresem `https://www./`.
