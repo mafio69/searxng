@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dokumentacja narzędzi — 2026-10-17
+- Usunięto odniesienia do nieużywanego narzędzia środowiskowego i ujednolicono odwołania do bezpośrednich poleceń testów w README oraz REPO.
+- Zachowano wymóg zgody na Bash oraz zakazy odczytu i publikowania sekretów.
+
 ### Zamknięcie sesji — 2026-10-17
 - Poprawki review wysłano na GitHub w commicie `d5336b6` (PR #1); bez merge i wdrożenia.
 - Zapisano ostateczną decyzję o zachowaniu obecnego wyglądu i świadomym nieprzyjęciu uwagi o kontraście.

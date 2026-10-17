@@ -15,8 +15,8 @@ Przed każdym commitem pełny zestaw testów wymagany przez repozytorium musi by
 
 1. Wykonuj tylko zakres zlecony przez Mariusza.
 2. Nie dodawaj zależności, nie aktualizuj pakietów i nie refaktoryzuj pobocznych elementów bez zgody.
-3. Nie odczytuj ani nie modyfikuj sekretów oraz nie analizuj `dxrun`, dotenvx i skryptów środowiska — obowiązuje `AGENTS.md`.
-4. Testy i jakość uruchamiaj przez `dxrun`, o ile polecenie wymaga środowiska.
+3. Nie odczytuj ani nie modyfikuj sekretów oraz nie analizuj dotenvx i skryptów środowiska — obowiązuje `AGENTS.md`.
+4. Testy i kontrole jakości uruchamiaj poleceniami opisanymi w `README.md` i `REPO.md`, zgodnie z zasadami `AGENTS.md`.
 
 ## Commit
 

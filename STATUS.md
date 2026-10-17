@@ -26,7 +26,7 @@ Aktualizacja: 2026-10-17
 ## Decyzje i ograniczenia
 
 - Brak nowych funkcji, nowych zależności i zmian wersji podczas stabilizacji.
-- W repo nie używamy `dxrun` — decyzja Mariusza.
+- Testy i kontrole jakości uruchamiamy bezpośrednio według `README.md` i `REPO.md`, zgodnie z zasadami `AGENTS.md`.
 - Agent nie ma dostępu do socketu Docker; operacje wymagające sudo wykonuje Mariusz.
 - Licznik Perplexity pozostaje nietrwały i niesynchronizowany; aplikacja nie ma logowania. Szczegóły w README.
 - Ostrzeżenie deprecacji Starlette TestClient/HTTPX nie blokuje testów; nie zmieniano zależności.

@@ -32,7 +32,6 @@ Klient MCP → /mcp ────────┘
 - Kontrola zmian: `git diff --check`.
 - Smoke: `python3 scripts/smoke_test.py`; opcja `--query` wykonuje rzeczywiste wyszukiwanie i może użyć płatnego Perplexity.
 - Development UI: `npm --prefix web run dev`, proxy `/api` do backendu na porcie 8890.
-- W repo nie używamy `dxrun` — decyzja Mariusza.
 
 ## Mechanizmy i ograniczenia
 
