@@ -20,5 +20,5 @@ Aktualizacja: 2026-10-17
 - Gałąź zadania zawsze z develop; po pracy i zielonych testach commit oraz lokalny merge do develop.
 - Push wyłącznie develop, po zgodzie Mariusza. Lokalną gałąź usuwa się dopiero po udanym pushu.
 - Istniejące scalone gałęzie zachowane do spełnienia tego warunku.
-- Przedstawiono potrzebę doprecyzowania GIT-FLOW.md; zmiana jego treści czeka na zatwierdzenie.
+- GIT-FLOW.md poprawiono po zatwierdzeniu Mariusza. Bieżąca korekta dokumentacji ma status fire i powstaje bezpośrednio na develop; bez pushu.
 - Dalsze naprawy audytu, testy rzeczywistych usług i wdrożenie wymagają wznowienia zadania przez Mariusza.

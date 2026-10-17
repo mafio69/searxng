@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Doprecyzowanie Git Flow — 2026-10-17
+- Zapisano pełną kolejność zadania: gałąź z develop, testy i commit, lokalny merge, weryfikacja develop, oczekiwanie na zgodę, push wyłącznie develop i usunięcie lokalnej gałęzi po udanym pushu.
+- Dodano obowiązek zgłaszania sprzecznych poleceń oraz omówienia uzasadnienia przed świadomym zatwierdzeniem wyjątku.
+- Określono zakres fire: zgoda właściciela na pracę bezpośrednio na develop nie zastępuje zielonych testów, ochrony sekretów ani zgody na push. Bieżąca korekta otrzymała ten status od Mariusza.
+
 ### Porządki Git — 2026-10-17
 - Uaktualniono HANDOFF i STATUS po lokalnym scaleniu całego search-ui i dokumentu audytu do develop.
 - Zachowano diagnostykę HTTP w ignorowanym katalogu lokalnym; nie jest częścią publikacji.
