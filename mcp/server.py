@@ -1,4 +1,6 @@
 import os, json, datetime, httpx
+from threading import Lock
+
 from mcp.server.fastmcp import FastMCP
 
 SEARXNG_URL = os.getenv("SEARXNG_URL", "http://searxng:8080")
@@ -10,6 +12,7 @@ PORT = int(os.getenv("MCP_PORT", "8000"))
 
 mcp = FastMCP("search", host=HOST, port=PORT)
 _pplx = {"day": None, "count": 0}
+_pplx_lock = Lock()
 
 
 async def _searxng(q: str, n: int) -> list[dict]:
@@ -28,13 +31,17 @@ async def _searxng(q: str, n: int) -> list[dict]:
 
 
 async def _perplexity(q: str, n: int) -> list[dict]:
-    today = datetime.date.today().isoformat()
-    if _pplx["day"] != today:
-        _pplx.update(day=today, count=0)
     if not PPLX_KEY:
         raise RuntimeError("brak PPLX_API_KEY")
-    if _pplx["count"] >= PPLX_DAILY_LIMIT:
-        raise RuntimeError("dzienny limit Perplexity wyczerpany")
+    today = datetime.date.today().isoformat()
+    # Reserve before HTTP. Failures/cancellation may still have incurred costs.
+    # The lock never covers network I/O or an await.
+    with _pplx_lock:
+        if _pplx["day"] != today:
+            _pplx.update(day=today, count=0)
+        if _pplx["count"] >= PPLX_DAILY_LIMIT:
+            raise RuntimeError("dzienny limit Perplexity wyczerpany")
+        _pplx["count"] += 1
     async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
         r = await client.post(
             "https://api.perplexity.ai/search",
@@ -42,7 +49,6 @@ async def _perplexity(q: str, n: int) -> list[dict]:
             json={"query": q, "max_results": n, "search_type": "fast"},
         )
     r.raise_for_status()
-    _pplx["count"] += 1
     return [
         {"title": x.get("title"), "url": x.get("url"),
          "snippet": (x.get("snippet") or "")[:400]}

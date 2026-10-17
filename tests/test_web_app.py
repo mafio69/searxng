@@ -218,7 +218,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         post.assert_not_called()
 
     @patch.object(server.httpx.AsyncClient, "post", new_callable=AsyncMock)
-    async def test_new_day_resets_limit_and_failed_http_is_not_counted(self, post):
+    async def test_new_day_resets_limit_and_failed_http_keeps_its_reservation(self, post):
         state = {"day": "2000-01-01", "count": 100}
         post.return_value = Mock()
         post.return_value.json.return_value = {"results": [{"snippet": "x" * 500}]}
@@ -228,7 +228,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
             post.return_value.raise_for_status.side_effect = RuntimeError("HTTP failure")
             with self.assertRaises(RuntimeError):
                 await server._perplexity("query", 1)
-            self.assertEqual(state["count"], 1)
+            self.assertEqual(state["count"], 2)
 
     @patch.object(server, "_perplexity", return_value=[{"url": "https://example.org"}])
     @patch.object(server, "_searxng", side_effect=RuntimeError("primary unavailable"))

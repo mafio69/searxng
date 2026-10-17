@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Q1 — Atomowy limit prób Perplexity — 2026-10-18
+- Limit jest rezerwowany pod krótką blokadą przed żądaniem HTTP. Nie zwracamy rezerwacji po błędzie ani anulowaniu, bo koszt po stronie dostawcy może już powstać. Test 100 równoległych prób przy limicie 50 potwierdza dokładnie 50 żądań. Licznik nadal jest lokalny dla procesu i resetuje się po restarcie; nie deklarujemy trwałego budżetu.
+- Walidacja: backend 25/25, frontend 17/17, build i diff-check PASS.
+
 ### S2 — Asynchroniczne wyszukiwanie — 2026-10-18
 - web_search i obaj dostawcy używają async/await oraz httpx.AsyncClient. Adapter API oczekuje na tę samą asynchroniczną usługę. Test sprawdza dwa opóźnienia po 1 s, wspólny czas poniżej 1,5 s oraz możliwość uruchomienia obu żądań przed ich zakończeniem.
 - Walidacja: backend 23/23, frontend 17/17, build i diff-check PASS.

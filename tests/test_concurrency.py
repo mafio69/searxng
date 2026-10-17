@@ -4,7 +4,7 @@ import sys
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'mcp'))
 import server
@@ -31,3 +31,40 @@ class ConcurrencyTests(unittest.IsolatedAsyncioTestCase):
             self.assertLess(time.perf_counter() - started, 1.5)
             self.assertEqual([json.loads(r)['source'] for r in replies], ['searxng', 'searxng'])
             paid.assert_not_called()
+
+    async def test_one_hundred_paid_attempts_allow_exactly_fifty_http_requests(self):
+        response = Mock()
+        response.json.return_value = {'results': []}
+
+        async def paid_response(*args, **kwargs):
+            await asyncio.sleep(0.01)
+            return response
+
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        client.post.side_effect = paid_response
+        state = {'day': server.datetime.date.today().isoformat(), 'count': 0}
+        with patch.object(server, 'PPLX_KEY', 'fixture-only'), patch.object(server, 'PPLX_DAILY_LIMIT', 50), patch.object(server, '_pplx', state), patch.object(server.httpx, 'AsyncClient', return_value=client):
+            replies = await asyncio.gather(*(server._perplexity('test', 1) for _ in range(100)), return_exceptions=True)
+        self.assertEqual(client.post.await_count, 50)
+        self.assertEqual(sum(isinstance(r, RuntimeError) for r in replies), 50)
+        self.assertEqual(state['count'], 50)
+
+    async def test_cancelled_paid_request_does_not_refund_unknown_cost(self):
+        entered = asyncio.Event()
+
+        async def waiting(*args, **kwargs):
+            entered.set()
+            await asyncio.Event().wait()
+
+        client = AsyncMock()
+        client.__aenter__.return_value = client
+        client.post.side_effect = waiting
+        state = {'day': server.datetime.date.today().isoformat(), 'count': 0}
+        with patch.object(server, 'PPLX_KEY', 'fixture-only'), patch.object(server, '_pplx', state), patch.object(server.httpx, 'AsyncClient', return_value=client):
+            task = asyncio.create_task(server._perplexity('test', 1))
+            await asyncio.wait_for(entered.wait(), 1)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+        self.assertEqual(state['count'], 1)

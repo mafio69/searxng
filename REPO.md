@@ -37,7 +37,7 @@ Klient MCP → /mcp ────────┘
 
 - MCP używa Streamable HTTP; inicjalizacja i sesja są wymagane. Wynik narzędzia jest tekstem JSON. Kontrakt: `docs/MCP-USAGE.md`.
 - `web_search` i dostawcy są asynchroniczni (HTTPX AsyncClient); API i MCP oczekują na tę samą usługę bez blokowania pętli zdarzeń. Limit wyniku 1–10, fragment do 400 znaków. Timeouty HTTP: SearXNG 10 s, Perplexity 20 s.
-- Perplexity uruchamia się wyłącznie po pustym wyniku/błędzie SearXNG. Domyślny licznik 50 dziennie jest w pamięci, resetuje się po restarcie/zmianie daty i nie jest synchronizowany między równoległymi wywołaniami.
+- Perplexity uruchamia się wyłącznie po pustym wyniku/błędzie SearXNG. Domyślny licznik 50 dziennie jest w pamięci, resetuje się po restarcie/zmianie daty. Rezerwacja próby przed HTTP jest chroniona krótką blokadą, bez oczekiwania na sieć pod blokadą.
 - Wszystkie trasy HTTP sprawdzają Host przez TrustedHostMiddleware. `SEARCH_ALLOWED_HOSTS` zawiera nazwy oddzielone przecinkami, domyślnie `127.0.0.1,localhost,mcp-search`; dodatkowe IP/domeny wymagają jawnego wpisu. Origin API musi odpowiadać zaufanemu hostowi.
 - Przeglądarkowe API wymaga application/json, zapytania do 500 znaków, limitu 1–10, odrzuca żądania cross-site i body powyżej 4096 bajtów. Nie ujawnia szczegółów błędów dostawców.
 - Historia jest wyłącznie w localStorage. Wyłączenie historii nie blokuje przekazania zapytania do backendu i wyszukiwarek.

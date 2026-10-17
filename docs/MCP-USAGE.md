@@ -102,9 +102,8 @@ nie jest gwarantowanym maksymalnym czasem całego wywołania.
 
 Domyślny dzienny limit Perplexity to 50. Licznik istnieje tylko w pamięci
 procesu, resetuje się po restarcie i przy zmianie lokalnej daty procesu.
-Zlicza odpowiedzi HTTP zaakceptowane przez `raise_for_status()`, przed
-parsowaniem JSON. Nie jest trwałym ani współdzielonym limitem kosztów;
-kod nie synchronizuje go między równoległymi wywołaniami.
+Rezerwuje próbę atomowo przed HTTP; błędy i anulowanie nie zwracają rezerwacji.
+Blokada nie obejmuje sieci. Nie jest to trwały ani współdzielony między procesami limit kosztów.
 
 Sukces z Perplexity nie zawiera informacji o wcześniejszym błędzie SearXNG.
 Serwer nie pobiera pełnej treści stron z wyników i nie oferuje osobnego

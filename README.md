@@ -39,7 +39,7 @@ Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG m
 |---|---|
 | `SEARXNG_SECRET` | Wymagany nowy losowy klucz SearXNG, ustawiany wyłącznie lokalnie; Compose nie wystartuje bez wartości |
 | `PPLX_API_KEY` | Opcjonalny klucz Perplexity; brak uniemożliwia użycie źródła awaryjnego |
-| `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit odpowiedzi Perplexity zliczanych w procesie |
+| `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit prób Perplexity rezerwowanych w procesie |
 | `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania |
 | `SEARCH_ALLOWED_HOSTS` | Zaufane nazwy hostów oddzielone przecinkami; domyślnie `127.0.0.1,localhost,mcp-search`. Przy własnym adresie LAN/domenie dodaj go jawnie, zachowując potrzebne dotychczasowe nazwy. Nie używaj `*`. |
 | `SEARCH_PORT` | Domyślnie `8890`; port publikowany na hoście |
@@ -120,7 +120,7 @@ API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwra
 docker compose logs --tail=50 searxng mcp-search
 ```
 
-Limit Perplexity jest przechowywany w pamięci procesu i resetuje się po restarcie lub zmianie daty. Nie jest trwałym, współdzielonym zabezpieczeniem budżetu ani ścisłym limitem przy równoległych żądaniach.
+Limit Perplexity jest przechowywany w pamięci procesu i resetuje się po restarcie lub zmianie daty. Rezerwacja prób jest atomowa w jednym procesie; błędy i anulowanie nie zwracają rezerwacji. Nie jest to trwały ani współdzielony między procesami budżet.
 
 ## Smoke test po uruchomieniu
 
