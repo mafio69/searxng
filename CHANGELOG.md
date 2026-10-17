@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### K3 — Przypięcie MCP i negocjacja protokołu — 2026-10-18
+- Biblioteka mcp==1.30.0 w mcp/requirements.txt. Test rzeczywistego initialize potwierdza wszystkie cztery wersje akceptowane przez WirralAI; nieznana wersja negocjuje 2025-11-25.
+- Walidacja: backend 32/32, frontend 17/17, build i diff-check PASS.
+
 ### S3 — Opcjonalna kontrola dostępu MCP — 2026-10-18
 - MCP_AUTH_TOKEN chroni /mcp i jego metody GET/POST/DELETE stałoczasowym porównaniem nagłówka Bearer. Dotyczy pełnej aplikacji i osobnego entrypointu MCP. Brak konfiguracji zachowuje poprzednie działanie; przeglądarkowe API i statyczne UI nie otrzymują ani nie wymagają tego sekretu. Smoke potrafi przekazać wartość z własnego środowiska wyłącznie do MCP.
 - Walidacja: backend 30/30, frontend 17/17, build i diff-check PASS.
