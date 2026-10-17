@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### K4 — Wspólne przykłady i testy transportu MCP — 2026-10-18
+- docs/contract/web_search.example.json zawiera syntetyczne ok/empty/error. Trzy testy pełnych sesji initialize → tools/list → tools/call porównują sparsowany blok tekstowy JSON ze wspólnym plikiem. Testy klienta WirralAI pozostają do uruchomienia po jego stronie.
+- Walidacja: backend 39/39, frontend 17/17, build i diff-check PASS.
+
 ### K1 — Jednoznaczny wynik pusty i awaria — 2026-10-18
 - Dodano status ok/empty/error. Poprawny brak wyników ma source null, results [] i errors []; awaria bez wyników zawsze error. Udany fallback ma ok bez errors. API oddaje 502 przy awarii. Dokumentacja zawiera nowe stany i negocjację protokołu.
 - Walidacja: backend 36/36, frontend 17/17, build i diff-check PASS.

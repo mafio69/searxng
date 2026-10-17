@@ -1,0 +1,10 @@
+{
+  "ok": {
+    "status": "ok",
+    "source": "searxng",
+    "results": [{"title": "Example", "url": "https://example.org/", "snippet": "Synthetic fixture"}],
+    "errors": []
+  },
+  "empty": {"status": "empty", "source": null, "results": [], "errors": []},
+  "error": {"status": "error", "source": null, "results": [], "errors": ["searxng_timeout", "perplexity_no_key"]}
+}

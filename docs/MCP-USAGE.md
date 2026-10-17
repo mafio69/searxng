@@ -49,6 +49,9 @@ Aktualny schemat argumentów pobieraj z `tools/list`.
 
 ## Odczyt wyniku
 
+Wspólne syntetyczne przykłady do testów klientów: [web_search.example.json](contract/web_search.example.json).
+Testy `tests/test_mcp_contract.py` porównują wszystkie trzy z odpowiedzią pełnej sesji MCP.
+
 Funkcja zwraca **tekst zawierający JSON**. W odpowiedzi MCP szukaj tekstowego
 bloku `content` i parsuj jego `text` jako JSON. Nie zakładaj, że wynik
 znajdzie się bezpośrednio w `response.results` lub `structuredContent`.
