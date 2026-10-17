@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Doprecyzowanie Git Flow — 2026-10-17
+- Zapisano pełną kolejność zadania: gałąź z develop, testy i commit, lokalny merge, weryfikacja develop, oczekiwanie na zgodę, push wyłącznie develop i usunięcie lokalnej gałęzi po udanym pushu.
+- Dodano obowiązek zgłaszania sprzecznych poleceń oraz omówienia uzasadnienia przed świadomym zatwierdzeniem wyjątku.
+- Określono zakres fire: zgoda właściciela na pracę bezpośrednio na develop nie zastępuje zielonych testów, ochrony sekretów ani zgody na push. Bieżąca korekta otrzymała ten status od Mariusza.
+
+### Porządki Git — 2026-10-17
+- Uaktualniono HANDOFF i STATUS po lokalnym scaleniu całego search-ui i dokumentu audytu do develop.
+- Zachowano diagnostykę HTTP w ignorowanym katalogu lokalnym; nie jest częścią publikacji.
+- Zapisano oczekiwanie na zgodę na push develop oraz warunek usuwania lokalnych gałęzi dopiero po udanym pushu.
+
+### Dokumentacja narzędzi — 2026-10-17
+- Usunięto odniesienia do nieużywanego narzędzia środowiskowego i ujednolicono odwołania do bezpośrednich poleceń testów w README oraz REPO.
+- Zachowano wymóg zgody na Bash oraz zakazy odczytu i publikowania sekretów.
+
+### Zamknięcie sesji — 2026-10-17
+- Poprawki review wysłano na GitHub w commicie `d5336b6` (PR #1); bez merge i wdrożenia.
+- Zapisano ostateczną decyzję o zachowaniu obecnego wyglądu i świadomym nieprzyjęciu uwagi o kontraście.
+- Potwierdzono rzeczywiste wyszukiwanie MCP z hosta przez SearXNG; problem DNS klienta VirralAI w kontenerze pozostaje do zdiagnozowania.
+
 ### Poprawki code review — 2026-10-17
 - Ochrona Host niezależną listą `SEARCH_ALLOWED_HOSTS`; test odrzucenia zgodnych, ale obcych nagłówków Host/Origin i zachowania dostępu Docker.
 - Usunięto awarię renderowania wyniku z adresem `https://www./`.

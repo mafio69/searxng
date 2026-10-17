@@ -1,26 +1,19 @@
 # HANDOFF.md — pałeczka między sesjami
 
-## Aktualne przekazanie — 2026-10-17
+## Stan po uporządkowaniu Git — 2026-10-17
 
-- Poprawki PR #1: niezależna lista zaufanych hostów (TrustedHostMiddleware), brak awarii dla `https://www./`, fokus/trap klawiatury mobilnej historii i wyłączenie ukrytego panelu z interakcji/drzewa dostępności.
-- Mariusz zabronił zmian wyglądu: kolory, układ i typografia zachowane. Uwaga review o kontraście celowo pozostaje otwarta. CSS zmienia wyłącznie visibility zamkniętego panelu mobilnego.
-- `SEARCH_ALLOWED_HOSTS`: domyślnie `127.0.0.1,localhost,mcp-search`; własne IP/domeny wymagają jawnego wpisu. Nazwy bez portów, nie stosować wildcardu.
-- Kontrole po poprawkach: backend 20/20, frontend 17/17, build Vite, diff check i smoke nowego kodu na porcie 8891 — PASS. Testowy serwer zatrzymano. Kontenerów nie przebudowywano.
-- Zgoda Mariusza na commit i push poprawek review na `feat/search-ui`. Nie obejmuje wdrożenia.
-- `tests/http/server-diagnostic.http` pozostaje osobnym, niezacommitowanym plikiem z wcześniejszej diagnostyki PhpStorm; nie dodawać go do commita poprawek review.
+- Lokalny develop zawiera w całości feat/search-ui oraz dokument audytu docs/AUDYT-2026-10-17.md. Scalenie 14e7c6a zostało wykonane lokalnie; nie wykonano push develop.
+- Nie wdrożono żadnej poprawki z audytu. Nowy interfejs, wcześniejsze review i dokumentacja narzędzi są już częścią develop.
+- Mariusz zatwierdził zapis pełnej kolejności w GIT-FLOW.md: branch z develop → zadanie → pełne testy → commit → lokalny merge do develop → weryfikacja stanu develop → oczekiwanie na zgodę na push → push wyłącznie develop → usunięcie lokalnej gałęzi po udanym pushu.
+- Gałęzie feat/search-ui i codex/audit-search-hardening pozostają zachowane do spełnienia warunku udanego pushu develop. Gałąź porządków codex/git-handoff-cleanup podlega tej samej zasadzie.
+- Lokalny plik diagnostyczny zachowano jako .local/tmp/http/server-diagnostic.http. Nie jest częścią publikacji.
+- Kontrola porządków: backend 20/20, frontend 17/17, build Vite i diff-check — PASS. Nowe zmiany dokumentacji sprawdzono przed commitem pod kątem sekretów.
 
-## Poprzednie przekazanie — 2026-10-16
+## Ograniczenia i następny krok
 
-- Mariusz określił obecny zakres jako **MVP 1.0**. Zadanie: stabilizacja bez nowych funkcji.
-- Gałąź `feat/search-ui`, zastane niezacommitowane zmiany zachowane. Zgoda Mariusza: agent sam wykonuje commit po zielonych kontrolach; push dopiero na osobne polecenie. Bez zmiany polityk.
-- Poprawiono odczyt historii zawierającej wpis `null`: pozostałe poprawne wpisy są zachowane.
-- Frontend i adapter HTTP odrzucają niepoprawną strukturę wyników: czytelny błąd UI / HTTP 502 zamiast awarii renderowania lub nieobsłużonego wyjątku.
-- Komunikat o braku frontendu odsyła do istniejącego README.
-- Testy: backend **17/17**, frontend **13/13**, build Vite i `git diff --check` — PASS. Testy obejmują także MCP tools/call z atrapą dostawcy, błędy odpowiedzi, ochronę cross-site i spóźnione odpowiedzi UI.
-- Smoke działających kontenerów na `http://127.0.0.1:8890` — PASS: frontend, zasoby, favicon, walidacja API, sesja MCP i tools/list. Test dotyczy dotychczasowego obrazu; najnowsze poprawki wymagają przebudowania.
-- Mariusz potwierdził działające wyszukiwanie screenem. W tej kontroli agent nie wykonywał rzeczywistych ani płatnych wyszukiwań.
-- Sieć `ai` i kontenery uruchomił Mariusz przez sudo. Agent nie ma dostępu do socketu Docker; nie zmieniać uprawnień systemowych. Przebudowanie po poprawkach: `sudo docker compose up -d --build`, następnie `python3 scripts/smoke_test.py`.
-- W tym repo nie używamy `dxrun` — decyzja Mariusza w rozmowie. Zależności testów lokalnie w `.local/python`; backend: `PYTHONPATH=.local/python python3 -m unittest discover -s tests -v`. TestClient wymagał uruchomienia poza sandboxem.
-- Starlette zgłasza ostrzeżenie deprecacji TestClient z HTTPX; testy przechodzą. Nie dodawano zależności ani nie zmieniano wersji w ramach stabilizacji.
-- Znane ograniczenia MVP: brak logowania, dostęp domyślnie przez loopback i sieć Docker `ai`, licznik Perplexity nietrwały i niesynchronizowany między równoległymi wywołaniami. Opis w README i docs/MCP-USAGE.md.
-- Integracja z docelowym klientem AI wymaga osobnej weryfikacji. Brak lokalnego `origin/develop`; nie wykonywano fetch ani zmian gałęzi podczas stabilizacji istniejącej pracy.
+- Wyjątek fire zatwierdzony przez Mariusza: korekta GIT-FLOW.md jest naprawą wcześniejszego opisu zasad, więc wykonujemy ją bezpośrednio na develop. Wyjątek obejmuje tę korektę i commit dokumentacji; nie obejmuje pomijania testów ani pushu.
+- Porządki dokumentacji scalono lokalnie do develop w e3f7a4d. Czekamy na decyzję Mariusza o dalszej pracy. Nie wykonywać push, wdrożenia ani kolejnych napraw audytu w ramach tej korekty.
+- Kontrola historii wcześniej wskazała historycznie śledzony secret_key SearXNG. Nie ujawniać wartości. Usunięcie pliku z kolejnych commitów nie usuwa sekretu ze starej historii; rotacja i ewentualne czyszczenie historii pozostają nierozwiązane.
+- Nie czytać .env, kluczy ani katalogów sekretów. Dane robocze wyłącznie w ignorowanym .local/, bez dostępu do .local/secret/.
+- Wymagane testy: PYTHONPATH=.local/python PYTHONPYCACHEPREFIX=.local/cache/pycache python3 -m unittest discover -s tests; npm --prefix web test; npm --prefix web run build; git diff --check. TestClient wymagał wykonania poza sandboxem. Testy nie wywołują rzeczywistych dostawców.
+- Nie zmieniać zaakceptowanego przez właściciela wyglądu UI. Integracja MCP na hoście działała, ale stan wdrożenia i połączenia kontenerów wymaga osobnej weryfikacji; nie przedstawiać wyników historycznych jako nowego testu.
