@@ -6,6 +6,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_container_defaults_to_unprivileged_user_and_immutable_image(self):
+        dockerfile = (ROOT / 'mcp/Dockerfile').read_text()
+        self.assertIn('USER 10001:10001', dockerfile)
+        self.assertLess(dockerfile.index('USER 10001:10001'), dockerfile.index('CMD'))
+        compose = (ROOT / 'docker-compose.yml').read_text()
+        self.assertNotIn(':latest', compose)
+        self.assertRegex(compose, r'image: searxng/searxng@sha256:[a-f0-9]{64}')
+
     def test_public_settings_never_contain_a_secret_value(self):
         settings = (ROOT / 'searxng-settings.example.yml').read_text()
         key_lines = [line.strip() for line in settings.splitlines() if line.strip().startswith('secret_key:')]

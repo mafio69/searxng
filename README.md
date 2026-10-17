@@ -92,7 +92,7 @@ Przykładowe argumenty:
 {"query": "jak działa metawyszukiwarka", "max_results": 3}
 ```
 
-Narzędzie zwraca tekst zawierający JSON z polami `source` i `results`. Źródło to `searxng`, `perplexity-fast` albo `null`, gdy obie próby zawiodą. Limit wyników jest ograniczany do zakresu 1–10.
+Narzędzie zwraca tekst JSON z polami `status`, `source`, `results`, `errors`. Status to `ok`, `empty` lub `error`; przy braku wyników i awarii źródło jest `null`, a rozróżnienie wynika ze statusu. Limit wyników jest ograniczany do zakresu 1–10.
 
 Pełny kontrakt, obsługę błędów i instrukcję dla agentów znajdziesz w **[docs/MCP-USAGE.md](docs/MCP-USAGE.md)**. Endpoint `/mcp` wymaga protokołu MCP, więc nie przyjmuje samego JSON-a z zapytaniem jak zwykłe API REST.
 

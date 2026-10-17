@@ -44,6 +44,7 @@ Klient MCP → /mcp ────────┘
 - Aplikacja nie ma logowania; port hosta domyślnie dostępny tylko przez loopback. Sieć `ai` daje dostęp innym podłączonym kontenerom.
 - `python mcp/server.py` uruchamia samo MCP; pełna aplikacja startuje przez `mcp/web_app.py`. Frontend jest kopiowany do obrazu podczas budowania.
 - FastMCP session manager uruchamia się raz na instancję; testy aplikacji izolują instancje MCP.
+- Obraz aplikacji deklaruje USER 10001:10001. SearXNG jest przypięty do manifestu sha256 z oficjalnego Docker Hub (metadane 2026-10-18); aktualizacja wymaga świadomej zmiany digestu. Test konfiguracji nie zastępuje zbudowania obrazu i sprawdzenia UID we wdrożeniu.
 - Dane robocze/cache/testy tymczasowe trafiają do ignorowanego `.local/`; nie czytać `.local/secret/`.
 
 - Opcjonalny MCP_AUTH_TOKEN chroni wszystkie metody /mcp (także samodzielny entrypoint). Bez konfiguracji zachowany jest dotychczasowy tryb. Nie jest to logowanie do przeglądarkowego UI/API.

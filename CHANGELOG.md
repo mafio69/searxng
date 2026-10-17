@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### S5 — Nieuprzywilejowany proces i stały obraz — 2026-10-18
+- Dockerfile deklaruje USER 10001:10001. SearXNG przypięto do oficjalnego manifestu Docker Hub sha256:8bdd9aa136b2dc3b9332cf24714fa34a375b8a1949a1201ec900c24d7378596e (publiczne metadane 2026-10-18). Test konfiguracji PASS. Runtime UID/build niepotwierdzone: brak dostępu do docker.sock; nie uruchamiano sudo ani wdrożenia.
+- Walidacja: backend 42/42, frontend 17/17, build i diff-check PASS.
+
 ### K2 — Walidacja zapytań MCP — 2026-10-18
 - Narzędzie i jego schemat ograniczają query do 1–1000 znaków Unicode; białe znaki są odrzucane przed dostawcami. Testy sprawdzają puste/1001 znaków bez HTTP oraz akceptację 1000 polskich znaków. UI/API zachowuje udokumentowany limit 500.
 - Walidacja: backend 41/41, frontend 17/17, build i diff-check PASS.
