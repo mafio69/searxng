@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### K2 — Walidacja zapytań MCP — 2026-10-18
+- Narzędzie i jego schemat ograniczają query do 1–1000 znaków Unicode; białe znaki są odrzucane przed dostawcami. Testy sprawdzają puste/1001 znaków bez HTTP oraz akceptację 1000 polskich znaków. UI/API zachowuje udokumentowany limit 500.
+- Walidacja: backend 41/41, frontend 17/17, build i diff-check PASS.
+
 ### K4 — Wspólne przykłady i testy transportu MCP — 2026-10-18
 - docs/contract/web_search.example.json zawiera syntetyczne ok/empty/error. Trzy testy pełnych sesji initialize → tools/list → tools/call porównują sparsowany blok tekstowy JSON ze wspólnym plikiem. Testy klienta WirralAI pozostają do uruchomienia po jego stronie.
 - Walidacja: backend 39/39, frontend 17/17, build i diff-check PASS.

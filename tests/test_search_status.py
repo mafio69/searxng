@@ -11,6 +11,20 @@ import server
 
 
 class SearchStatusTests(unittest.IsolatedAsyncioTestCase):
+    async def test_invalid_queries_never_call_providers(self):
+        with patch.object(server, '_searxng') as primary, patch.object(server, '_perplexity') as fallback:
+            for query in ['', '   ', 'x' * 1001, None]:
+                with self.subTest(length=len(query) if query is not None else None):
+                    with self.assertRaises(ValueError):
+                        await server.web_search(query)
+            primary.assert_not_called()
+            fallback.assert_not_called()
+
+    async def test_query_limit_counts_unicode_characters(self):
+        with patch.object(server, '_searxng', return_value=[]) as primary, patch.object(server, '_perplexity', return_value=[]):
+            await server.web_search('ą' * 1000)
+            primary.assert_awaited_once_with('ą' * 1000, 5)
+
     async def search(self, primary, fallback):
         def options(value):
             return {'side_effect': value} if isinstance(value, Exception) else {'return_value': value}

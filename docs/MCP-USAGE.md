@@ -34,7 +34,7 @@ Nazwa serwera: `search`. Nazwa narzędzia: `web_search`.
 
 | Argument | Typ | Wymagany | Zachowanie |
 |---|---|---|---|
-| `query` | string | tak | Zapytanie przekazane do wyszukiwarki |
+| `query` | string | tak | Niepuste po trim, maksymalnie 1000 znaków Unicode |
 | `max_results` | integer | nie | Domyślnie 5; kod ogranicza wartość do 1–10 |
 
 Przykładowe argumenty:
@@ -43,8 +43,8 @@ Przykładowe argumenty:
 {"query":"MCP Streamable HTTP specification","max_results":3}
 ```
 
-Warstwa aplikacji nie odrzuca pustego zapytania. Klient powinien sprawdzić,
-że `query` po usunięciu białych znaków nie jest pusty.
+Narzędzie odrzuca puste i zbyt długie zapytania przed wywołaniem dostawców.
+Przeglądarkowe UI/API zachowuje swój bardziej restrykcyjny limit 500 znaków.
 Aktualny schemat argumentów pobieraj z `tools/list`.
 
 ## Odczyt wyniku

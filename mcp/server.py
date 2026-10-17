@@ -1,7 +1,9 @@
 import os, json, datetime, httpx
 from threading import Lock
+from typing import Annotated
 
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
 
 SEARXNG_URL = os.getenv("SEARXNG_URL", "http://searxng:8080")
 SEARXNG_LANG = os.getenv("SEARXNG_LANG", "auto")
@@ -71,8 +73,11 @@ async def _perplexity(q: str, n: int) -> list[dict]:
 
 
 @mcp.tool()
-async def web_search(query: str, max_results: int = 5) -> str:
+async def web_search(query: Annotated[str, Field(min_length=1, max_length=1000)], max_results: int = 5) -> str:
     """Wyszukaj w internecie. JSON: status ok/empty/error, source, results, errors."""
+    if not isinstance(query, str) or not query.strip() or len(query) > 1000:
+        raise ValueError("query must contain 1–1000 characters")
+    query = query.strip()
     n = max(1, min(max_results, 10))
     errors = []
     try:

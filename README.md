@@ -106,7 +106,7 @@ curl http://127.0.0.1:8890/api/search \
   -d '{"query":"metawyszukiwarka SearXNG","max_results":5}'
 ```
 
-API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwraca `source` oraz `results` z polami `title`, `url`, `snippet`. Szczegóły błędów dostawców nie trafiają do przeglądarki. Pusta lista i `source: null` oznaczają nieudane wyszukiwanie, nawet przy HTTP 200.
+API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwraca `status`, `source` oraz `results` z polami `title`, `url`, `snippet`. `status: empty`, pusta lista i `source: null` oznaczają poprawne wyszukanie bez wyników. Awaria daje HTTP 502 bez szczegółów dostawców. Narzędzie MCP dopuszcza do 1000 znaków Unicode i odrzuca puste zapytania przed HTTP.
 
 ## Gdy coś nie działa
 
