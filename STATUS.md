@@ -1,24 +1,10 @@
 # STATUS.md
 
-Aktualizacja: 2026-10-17
+Aktualizacja: 2026-10-18.
 
-## Stan projektu
-
-- MVP 1.0: React, backend Python, SearXNG i opcjonalny Perplexity wyłącznie po pustym wyniku lub błędzie źródła podstawowego.
-- Lokalny develop zawiera cały feat/search-ui i dokument audytu. Nie wykonano push develop.
-- Poprawki audytu nie zostały wdrożone. Zakres i kryteria: docs/AUDYT-2026-10-17.md.
-- Śledzone pliki są zapisane w Git; diagnostykę HTTP zachowano lokalnie w .local/tmp/http/.
-
-## Weryfikacja
-
-- Przy porządkach ponownie: backend 20/20, frontend 17/17, build Vite i diff-check — PASS. Skan nowych zmian dokumentacji przed commitem.
-- Wyniki nie potwierdzają wdrożenia ani bezpieczeństwa starej historii. Historyczne wykrycie secret_key pozostaje nierozwiązane.
-- Testy i kontrole uruchamiamy bezpośrednio według README.md i REPO.md, zgodnie z AGENTS.md.
-
-## Git i następny krok
-
-- Gałąź zadania zawsze z develop; po pracy i zielonych testach commit oraz lokalny merge do develop.
-- Push wyłącznie develop, po zgodzie Mariusza. Lokalną gałąź usuwa się dopiero po udanym pushu.
-- Istniejące scalone gałęzie zachowane do spełnienia tego warunku.
-- GIT-FLOW.md poprawiono po zatwierdzeniu Mariusza. Bieżąca korekta dokumentacji ma status fire i powstaje bezpośrednio na develop; bez pushu.
-- Dalsze naprawy audytu, testy rzeczywistych usług i wdrożenie wymagają wznowienia zadania przez Mariusza.
+- Wykonujemy audyt z docs/AUDYT-2026-10-17.md na docs/audyt-2026-10-17. Każdy etap kończy się testami, commitem i lokalnym merge do develop; następnie powrót na gałąź audytu. Bez push.
+- Etapy kodu zakończone w tej sesji: S1. Ostatni: S1 — Oddzielenie klucza od wersjonowanej konfiguracji.
+- Compose montuje pusty publiczny szablon i wymaga lokalnego SEARXNG_SECRET. Dawny plik usunięto wyłącznie ze śledzenia, bez odczytu i zmiany lokalnej wartości. Rotacja klucza i rzeczywisty start pozostają do potwierdzenia przez operatora; stara historia nie została usunięta.
+- Kontrole: backend 22/22, frontend 17/17, build i diff-check PASS. Testy offline; rzeczywistego wdrożenia nie potwierdzano.
+- Otwarta czynność operatora S1: nowy SEARXNG_SECRET i start SearXNG; nie używać starej wartości z historii. Brak zgody na przepisywanie historii GitHuba.
+- MCP nadal wymaga zgodnego kontraktu z wirralAI; punkty K1–K4 weryfikujemy na wspólnych przykładach.

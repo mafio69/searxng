@@ -1,9 +1,11 @@
 services:
   searxng:
     image: searxng/searxng:latest
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:?Set a new local SearXNG secret before starting}
     restart: unless-stopped
     volumes:
-      - ./searxng-settings.yml:/etc/searxng/settings.yml:ro
+      - ./searxng-settings.example.yml:/etc/searxng/settings.yml:ro
     networks:
       - ai
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### S1 — Oddzielenie klucza od wersjonowanej konfiguracji — 2026-10-18
+- Compose montuje pusty publiczny szablon i wymaga lokalnego SEARXNG_SECRET. Dawny plik usunięto wyłącznie ze śledzenia, bez odczytu i zmiany lokalnej wartości. Rotacja klucza i rzeczywisty start pozostają do potwierdzenia przez operatora; stara historia nie została usunięta.
+- Walidacja: backend 22/22, frontend 17/17, build i diff-check PASS.
+
 ### Doprecyzowanie Git Flow — 2026-10-17
 - Zapisano pełną kolejność zadania: gałąź z develop, testy i commit, lokalny merge, weryfikacja develop, oczekiwanie na zgodę, push wyłącznie develop i usunięcie lokalnej gałęzi po udanym pushu.
 - Dodano obowiązek zgłaszania sprzecznych poleceń oraz omówienia uzasadnienia przed świadomym zatwierdzeniem wyjątku.

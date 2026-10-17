@@ -37,6 +37,7 @@ Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG m
 
 | Zmienna | Domyślne zachowanie / zastosowanie |
 |---|---|
+| `SEARXNG_SECRET` | Wymagany nowy losowy klucz SearXNG, ustawiany wyłącznie lokalnie; Compose nie wystartuje bez wartości |
 | `PPLX_API_KEY` | Opcjonalny klucz Perplexity; brak uniemożliwia użycie źródła awaryjnego |
 | `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit odpowiedzi Perplexity zliczanych w procesie |
 | `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania |
@@ -46,7 +47,7 @@ Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG m
 
 Compose ustawia `SEARXNG_URL` na `http://searxng:8080`. Zostaw domyślne `MCP_HOST` (`0.0.0.0`) i `MCP_PORT` (`8000`) wewnątrz kontenera, aby zachować zgodność z mapowaniem portów.
 
-SearXNG korzysta z `searxng-settings.yml`. Przed własnym wdrożeniem skonfiguruj lokalnie własny losowy `server.secret_key` i upewnij się, że `search.formats` dopuszcza format `json`. Wartości sekretów nie publikuj w repozytorium.
+SearXNG montuje publiczny `searxng-settings.example.yml` z pustym `server.secret_key`; rzeczywista wartość pochodzi wyłącznie ze zmiennej `SEARXNG_SECRET` ustawionej lokalnie w `.env` lub środowisku operatora. Wygeneruj nową losową wartość — starego klucza z historii nie używaj ponownie. Nie wklejaj go do czatu ani logów. Dotychczasowy lokalny `searxng-settings.yml` pozostaje na dysku, ale nie jest już śledzony ani montowany przez Compose. Ta zmiana nie usuwa starego klucza z historii Git; rotację i uruchomienie nowego obrazu potwierdza operator.
 
 ### 2. Przygotuj sieć i uruchom usługi
 

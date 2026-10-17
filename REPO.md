@@ -24,7 +24,7 @@ Klient MCP → /mcp ────────┘
 ## Uruchamianie i kontrole
 
 - Docker Compose buduje frontend na Node.js 24 i backend na Pythonie 3.12. Lokalny frontend wymaga Node.js >=22.12.
-- `docker-compose.yml` wymaga istniejącej sieci `ai` i lokalnego `.env`; bez Perplexity plik może być pusty.
+- `docker-compose.yml` wymaga istniejącej sieci `ai`, lokalnego `.env` oraz nowej wartości `SEARXNG_SECRET` w środowisku operatora. Publiczny `searxng-settings.example.yml` ma pusty klucz; dawny lokalny `searxng-settings.yml` jest ignorowany i nie jest montowany.
 - Start: `docker compose up -d --build`. Przy wymaganym sudo polecenie wykonuje operator.
 - Web: `http://127.0.0.1:8890/`. MCP na hoście: `http://127.0.0.1:8890/mcp`; w sieci `ai`: `http://mcp-search:8000/mcp`.
 - Testy backendu po instalacji `mcp/requirements.txt`: `python3 -m unittest discover -s tests -v`.

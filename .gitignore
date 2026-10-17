@@ -74,3 +74,6 @@ env/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Local legacy configuration can contain a real key; never publish it.
+/searxng-settings.yml
