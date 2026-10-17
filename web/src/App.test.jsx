@@ -21,6 +21,13 @@ async function submit(query = 'Pomorze') {
 }
 
 describe('search application', () => {
+  it('renders successful empty status without a provider failure alert', async () => {
+    fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'empty', source: null, results: [] }) });
+    render(<App />); await submit();
+    await screen.findByText('Spróbuj spojrzeć inaczej');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('searches through the API, renders links and persists reusable history', async () => {
     render(<App />);
     const user = await submit();

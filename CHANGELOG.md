@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### K1-UI — Stan pusty również w przeglądarce — 2026-10-18
+- Usunięto pozostałe utożsamienie source null z awarią w React. status empty wyświetla brak wyników bez alarmu. Test regresji zachowuje rozróżnienie starszych odpowiedzi bez statusu.
+- Walidacja: backend 43/43, frontend 18/18, build i diff-check PASS.
+
 ### Q2 — Aktualny pusty szablon środowiska — 2026-10-18
 - Publiczny .env.example zawiera wszystkie zmienne README oraz wejścia MCP, wyłącznie puste wartości. Puste pola opcjonalne używają domyślnych ustawień zamiast psuć start przez int(""). Test szablonu i uruchomienia konfiguracji na syntetycznie pustym środowisku; prawdziwego .env nie odczytano.
 - Walidacja: backend 43/43, frontend 17/17, build i diff-check PASS.
