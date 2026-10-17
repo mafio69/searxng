@@ -57,6 +57,8 @@ Przykładowy JSON wewnątrz bloku tekstowego (dane ilustracyjne):
 
 ```json
 {
+  "status": "ok",
+  "errors": [],
   "source": "searxng",
   "results": [
     {
@@ -73,21 +75,23 @@ Każdy wynik zawiera `title`, `url`, `snippet`; tytuł i URL mogą być `null`,
 a fragment pusty. Fragment jest ucinany do 400 znaków.
 Liczba wyników może być mniejsza od zamówionej.
 
-Gdy obie próby zakończą się błędem, serwer zwraca JSON podobny do:
+Status rozstrzyga wynik: `ok` ma wyniki i puste errors, `empty` oznacza poprawne wyszukanie bez wyników, `error` oznacza awarię z niepustymi kodami errors. Przy empty/error source jest null, results jest puste.
+
+Poprawny brak wyników:
 
 ```json
-{
-  "source": null,
-  "results": [],
-  "errors": ["searxng: pusty wynik", "perplexity: brak PPLX_API_KEY"]
-}
+{"status":"empty","source":null,"results":[],"errors":[]}
 ```
 
-Sprawdzaj zarówno błędy transportu/protokołu i MCP `isError`, jak i pola
-wewnętrznego JSON. Błąd dostawców jest zwracany jako zwykły tekstowy wynik
-narzędzia, więc samo udane `tools/call` nie oznacza udanego wyszukania.
-Perplexity może także zwrócić `source: "perplexity-fast"` i pustą listę;
-to również oznacza brak materiału do odpowiedzi.
+Awaria (wyłącznie bezpieczne kody, bez treści wyjątku):
+
+```json
+{"status":"error","source":null,"results":[],"errors":["searxng_timeout","perplexity_no_key"]}
+```
+
+Brak skonfigurowanego opcjonalnego Perplexity po poprawnym pustym SearXNG daje empty. Błąd dostawcy lub wyczerpany limit bez wyników daje error, także gdy drugi dostawca zwrócił poprawne zero wyników. Udany fallback z wynikami daje ok i puste errors. API przeglądarki mapuje awarię na HTTP 502.
+
+Sprawdzaj też błędy transportu/protokołu i MCP isError. Błąd dostawcy jest tekstowym wynikiem narzędzia; samo udane tools/call nie oznacza udanego wyszukania.
 
 ## Przebieg i ograniczenia
 
@@ -157,9 +161,13 @@ Nazwy zmiennych: `SEARXNG_URL`, `SEARXNG_LANG`, `PPLX_API_KEY`,
 `PPLX_DAILY_LIMIT`, `MCP_HOST`, `MCP_PORT`. Sekrety konfiguruje operator;
 agent integrujący nie potrzebuje odczytu `.env`.
 
-Serwer używa Python 3.12 w obrazie oraz `mcp>=1.2,<2` i `httpx>=0.27`.
+Serwer używa Python 3.12 w obrazie oraz `mcp==1.30.0` i `httpx>=0.27`.
 Nie podnoś MCP do v2 w ramach integracji — implementacja używa FastMCP v1.
 Polecenia operacyjne opisuje [INSTRUKCJA.md](INSTRUKCJA.md), a obowiązujące
 zasady pracy: [AGENTS.md](../AGENTS.md) i [GIT-FLOW.md](../GIT-FLOW.md).
 
 Smoke nie wczytuje pliku .env; przy ochronie MCP operator musi przekazać MCP_AUTH_TOKEN w środowisku procesu testowego. Nigdy nie wypisuj wartości.
+
+## Potwierdzona negocjacja protokołu
+
+MCP 1.30.0 jest przypięte w mcp/requirements.txt. Lokalny test initialize potwierdza negocjację 2024-11-05, 2025-03-26, 2025-06-18 i 2025-11-25. Nieznana wersja klienta otrzymuje 2025-11-25; klient musi ją zaakceptować przed kontynuacją. To test kodu z atrapami, nie potwierdzenie aktualizacji działającego kontenera.

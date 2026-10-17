@@ -71,7 +71,8 @@ class WebAppTests(unittest.TestCase):
     def test_provider_details_are_not_exposed(self):
         self.service.return_value = json.dumps({"source": None, "results": [], "errors": ["private operational detail"]})
         response = self.client.post("/api/search", json={"query": "test"})
-        self.assertEqual(response.json(), {"source": None, "results": []})
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json(), {"error": "Search unavailable"})
         self.service.side_effect = RuntimeError("private operational detail")
         response = self.client.post("/api/search", json={"query": "test"})
         self.assertEqual(response.status_code, 502)
@@ -176,7 +177,8 @@ class SearchFallbackTests(unittest.IsolatedAsyncioTestCase):
     @patch.object(server, "_perplexity", return_value=[])
     @patch.object(server, "_searxng", return_value=[])
     async def test_empty_primary_uses_fallback(self, searxng, perplexity):
-        self.assertEqual(json.loads(await server.web_search("test"))["source"], "perplexity-fast")
+        self.assertEqual(json.loads(await server.web_search("test")), {
+            "status": "empty", "source": None, "results": [], "errors": []})
         perplexity.assert_called_once_with("test", 5)
 
     @patch.object(server, "_perplexity", side_effect=RuntimeError("fallback unavailable"))

@@ -54,8 +54,11 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
                 raise ValueError("Invalid search result")
         except Exception:
             return JSONResponse({"error": "Search unavailable"}, status_code=502)
+        if result.get("status") == "error" or result.get("errors"):
+            return JSONResponse({"error": "Search unavailable"}, status_code=502)
         # Raw exception strings from providers can contain operational details.
-        return JSONResponse({"source": result.get("source"), "results": result.get("results", [])})
+        return JSONResponse({"status": result.get("status", "ok" if result["results"] else "empty"),
+                             "source": result.get("source"), "results": result.get("results", [])})
 
     async def index(request: Request):
         if not (assets / "index.html").is_file():

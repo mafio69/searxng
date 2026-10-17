@@ -20,7 +20,7 @@ class ProviderUnavailable(RuntimeError):
 
 
 def _error_code(provider, error):
-    if isinstance(error, ProviderUnavailable):
+    if isinstance(error, ProviderUnavailable) and str(error) in ("perplexity_no_key", "perplexity_limit"):
         return str(error)
     if isinstance(error, httpx.TimeoutException):
         return provider + "_timeout"
@@ -72,21 +72,26 @@ async def _perplexity(q: str, n: int) -> list[dict]:
 
 @mcp.tool()
 async def web_search(query: str, max_results: int = 5) -> str:
-    """Wyszukaj w internecie. Zwraca JSON: source, results[title,url,snippet]."""
+    """Wyszukaj w internecie. JSON: status ok/empty/error, source, results, errors."""
     n = max(1, min(max_results, 10))
     errors = []
     try:
         res = await _searxng(query, n)
         if res:
-            return json.dumps({"source": "searxng", "results": res}, ensure_ascii=False)
+            return json.dumps({"status": "ok", "source": "searxng", "results": res, "errors": []}, ensure_ascii=False)
     except Exception as e:
         errors.append(_error_code("searxng", e))
     try:
         res = await _perplexity(query, n)
-        return json.dumps({"source": "perplexity-fast", "results": res}, ensure_ascii=False)
+        if res:
+            return json.dumps({"status": "ok", "source": "perplexity-fast", "results": res, "errors": []}, ensure_ascii=False)
     except Exception as e:
-        errors.append(_error_code("perplexity", e))
-    return json.dumps({"source": None, "results": [], "errors": errors}, ensure_ascii=False)
+        code = _error_code("perplexity", e)
+        # An unconfigured optional fallback is disabled, not a failed search.
+        if code != "perplexity_no_key" or errors:
+            errors.append(code)
+    return json.dumps({"status": "error" if errors else "empty", "source": None,
+                       "results": [], "errors": errors}, ensure_ascii=False)
 
 
 if __name__ == "__main__":
