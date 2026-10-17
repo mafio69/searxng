@@ -33,7 +33,7 @@ Potrzebujesz Dockera z Compose, dostępu do Internetu dla wyszukiwania i pobrani
 
 ### 1. Przygotuj konfigurację
 
-Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG może być pusty. Nie dodawaj go do Gita.
+Utwórz lokalny plik `.env` na podstawie `.env.example` i ustaw nowy `SEARXNG_SECRET`. Pozostałe puste pola używają domyślnych wartości lub wyłączają opcjonalną integrację. Compose wymaga pliku i klucza. Nie dodawaj rzeczywistego `.env` do Gita.
 
 | Zmienna | Domyślne zachowanie / zastosowanie |
 |---|---|

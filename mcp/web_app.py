@@ -76,9 +76,8 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
         os.getenv("MCP_AUTH_TOKEN", "") if mcp_auth is None else mcp_auth
     ))
     trusted_hosts = allowed_hosts if allowed_hosts is not None else [
-        host.strip() for host in os.getenv(
-            "SEARCH_ALLOWED_HOSTS", "127.0.0.1,localhost,mcp-search"
-        ).split(",") if host.strip()
+        host.strip() for host in (os.getenv("SEARCH_ALLOWED_HOSTS")
+                                 or "127.0.0.1,localhost,mcp-search").split(",") if host.strip()
     ]
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts,
                        www_redirect=False)

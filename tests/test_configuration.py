@@ -1,11 +1,29 @@
 """Regression checks for public deployment config; never read real env files."""
 import unittest
+import re
+import runpy
+import sys
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_env_template_covers_readme_and_contains_only_empty_values(self):
+        template = (ROOT / '.env.example').read_text()
+        entries = [line.split('=', 1) for line in template.splitlines() if line and not line.startswith('#')]
+        self.assertTrue(all(len(entry) == 2 and entry[1] == '' for entry in entries))
+        names = {entry[0] for entry in entries}
+        readme_names = set(re.findall(r'^\| `([A-Z][A-Z_]+)` \|', (ROOT / 'README.md').read_text(), re.M))
+        self.assertTrue(readme_names <= names)
+        sys.path.insert(0, str(ROOT / 'mcp'))
+        with patch.dict('os.environ', {name: '' for name in names}, clear=True):
+            configuration = runpy.run_path(str(ROOT / 'mcp/server.py'))
+        self.assertEqual(configuration['PPLX_DAILY_LIMIT'], 50)
+        self.assertEqual(configuration['PORT'], 8000)
+        self.assertEqual(configuration['SEARXNG_LANG'], 'auto')
+
     def test_container_defaults_to_unprivileged_user_and_immutable_image(self):
         dockerfile = (ROOT / 'mcp/Dockerfile').read_text()
         self.assertIn('USER 10001:10001', dockerfile)

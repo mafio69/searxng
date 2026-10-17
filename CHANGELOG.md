@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Q2 — Aktualny pusty szablon środowiska — 2026-10-18
+- Publiczny .env.example zawiera wszystkie zmienne README oraz wejścia MCP, wyłącznie puste wartości. Puste pola opcjonalne używają domyślnych ustawień zamiast psuć start przez int(""). Test szablonu i uruchomienia konfiguracji na syntetycznie pustym środowisku; prawdziwego .env nie odczytano.
+- Walidacja: backend 43/43, frontend 17/17, build i diff-check PASS.
+
 ### S5 — Nieuprzywilejowany proces i stały obraz — 2026-10-18
 - Dockerfile deklaruje USER 10001:10001. SearXNG przypięto do oficjalnego manifestu Docker Hub sha256:8bdd9aa136b2dc3b9332cf24714fa34a375b8a1949a1201ec900c24d7378596e (publiczne metadane 2026-10-18). Test konfiguracji PASS. Runtime UID/build niepotwierdzone: brak dostępu do docker.sock; nie uruchamiano sudo ani wdrożenia.
 - Walidacja: backend 42/42, frontend 17/17, build i diff-check PASS.

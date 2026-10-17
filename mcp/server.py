@@ -5,12 +5,12 @@ from typing import Annotated
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
-SEARXNG_URL = os.getenv("SEARXNG_URL", "http://searxng:8080")
-SEARXNG_LANG = os.getenv("SEARXNG_LANG", "auto")
+SEARXNG_URL = os.getenv("SEARXNG_URL") or "http://searxng:8080"
+SEARXNG_LANG = os.getenv("SEARXNG_LANG") or "auto"
 PPLX_KEY = os.getenv("PPLX_API_KEY", "")
-PPLX_DAILY_LIMIT = int(os.getenv("PPLX_DAILY_LIMIT", "50"))
-HOST = os.getenv("MCP_HOST", "0.0.0.0")
-PORT = int(os.getenv("MCP_PORT", "8000"))
+PPLX_DAILY_LIMIT = int(os.getenv("PPLX_DAILY_LIMIT") or "50")
+HOST = os.getenv("MCP_HOST") or "0.0.0.0"
+PORT = int(os.getenv("MCP_PORT") or "8000")
 
 mcp = FastMCP("search", host=HOST, port=PORT)
 _pplx = {"day": None, "count": 0}
