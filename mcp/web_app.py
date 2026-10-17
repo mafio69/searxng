@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 import uvicorn
-from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse
@@ -44,7 +43,7 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
                 or type(count) is not int or not 1 <= count <= 10):
             return JSONResponse({"error": "Invalid search arguments"}, status_code=400)
         try:
-            result = json.loads(await run_in_threadpool(search_service, query.strip(), count))
+            result = json.loads(await search_service(query.strip(), count))
             if (not isinstance(result, dict)
                     or result.get("source") not in ("searxng", "perplexity-fast", None)
                     or not isinstance(result.get("results"), list)

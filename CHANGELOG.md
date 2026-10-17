@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### S2 — Asynchroniczne wyszukiwanie — 2026-10-18
+- web_search i obaj dostawcy używają async/await oraz httpx.AsyncClient. Adapter API oczekuje na tę samą asynchroniczną usługę. Test sprawdza dwa opóźnienia po 1 s, wspólny czas poniżej 1,5 s oraz możliwość uruchomienia obu żądań przed ich zakończeniem.
+- Walidacja: backend 23/23, frontend 17/17, build i diff-check PASS.
+
 ### S1 — Oddzielenie klucza od wersjonowanej konfiguracji — 2026-10-18
 - Compose montuje pusty publiczny szablon i wymaga lokalnego SEARXNG_SECRET. Dawny plik usunięto wyłącznie ze śledzenia, bez odczytu i zmiany lokalnej wartości. Rotacja klucza i rzeczywisty start pozostają do potwierdzenia przez operatora; stara historia nie została usunięta.
 - Walidacja: backend 22/22, frontend 17/17, build i diff-check PASS.

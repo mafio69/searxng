@@ -12,12 +12,12 @@ mcp = FastMCP("search", host=HOST, port=PORT)
 _pplx = {"day": None, "count": 0}
 
 
-def _searxng(q: str, n: int) -> list[dict]:
-    r = httpx.get(
-        f"{SEARXNG_URL}/search",
-        params={"q": q, "format": "json", "language": SEARXNG_LANG},
-        timeout=10,
-    )
+async def _searxng(q: str, n: int) -> list[dict]:
+    async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
+        r = await client.get(
+            f"{SEARXNG_URL}/search",
+            params={"q": q, "format": "json", "language": SEARXNG_LANG},
+        )
     r.raise_for_status()
     out = r.json().get("results", [])[:n]
     return [
@@ -27,7 +27,7 @@ def _searxng(q: str, n: int) -> list[dict]:
     ]
 
 
-def _perplexity(q: str, n: int) -> list[dict]:
+async def _perplexity(q: str, n: int) -> list[dict]:
     today = datetime.date.today().isoformat()
     if _pplx["day"] != today:
         _pplx.update(day=today, count=0)
@@ -35,12 +35,12 @@ def _perplexity(q: str, n: int) -> list[dict]:
         raise RuntimeError("brak PPLX_API_KEY")
     if _pplx["count"] >= PPLX_DAILY_LIMIT:
         raise RuntimeError("dzienny limit Perplexity wyczerpany")
-    r = httpx.post(
-        "https://api.perplexity.ai/search",
-        headers={"Authorization": f"Bearer {PPLX_KEY}"},
-        json={"query": q, "max_results": n, "search_type": "fast"},
-        timeout=20,
-    )
+    async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+        r = await client.post(
+            "https://api.perplexity.ai/search",
+            headers={"Authorization": f"Bearer {PPLX_KEY}"},
+            json={"query": q, "max_results": n, "search_type": "fast"},
+        )
     r.raise_for_status()
     _pplx["count"] += 1
     return [
@@ -51,19 +51,19 @@ def _perplexity(q: str, n: int) -> list[dict]:
 
 
 @mcp.tool()
-def web_search(query: str, max_results: int = 5) -> str:
+async def web_search(query: str, max_results: int = 5) -> str:
     """Wyszukaj w internecie. Zwraca JSON: source, results[title,url,snippet]."""
     n = max(1, min(max_results, 10))
     errors = []
     try:
-        res = _searxng(query, n)
+        res = await _searxng(query, n)
         if res:
             return json.dumps({"source": "searxng", "results": res}, ensure_ascii=False)
         errors.append("searxng: pusty wynik")
     except Exception as e:
         errors.append(f"searxng: {e}")
     try:
-        res = _perplexity(query, n)
+        res = await _perplexity(query, n)
         return json.dumps({"source": "perplexity-fast", "results": res}, ensure_ascii=False)
     except Exception as e:
         errors.append(f"perplexity: {e}")
