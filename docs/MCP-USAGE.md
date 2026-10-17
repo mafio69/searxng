@@ -21,7 +21,7 @@ Transport: **MCP Streamable HTTP**.
 `127.0.0.1` wewnątrz kontenera wskazuje ten kontener. Aplikacja w kontenerze
 musi być podłączona do sieci `ai`, aby użyć nazwy `mcp-search`.
 Compose publikuje port 8890 tylko na loopback hosta. Nie określa publicznego
-adresu serwera. Kod aplikacji nie dodaje własnej warstwy uwierzytelniania.
+adresu serwera. Po ustawieniu MCP_AUTH_TOKEN wszystkie żądania /mcp wymagają nagłówka Authorization: Bearer z wartością pobraną wyłącznie z bezpiecznej konfiguracji backendu. Brak konfiguracji zachowuje tryb bez uwierzytelnienia. Nie przekazuj tej wartości modelowi ani przeglądarce.
 
 Użyj klienta MCP obsługującego Streamable HTTP. Przeprowadź inicjalizację
 sesji, pobierz `tools/list`, a narzędzie wywołuj przez `tools/call`.
@@ -161,3 +161,5 @@ Serwer używa Python 3.12 w obrazie oraz `mcp>=1.2,<2` i `httpx>=0.27`.
 Nie podnoś MCP do v2 w ramach integracji — implementacja używa FastMCP v1.
 Polecenia operacyjne opisuje [INSTRUKCJA.md](INSTRUKCJA.md), a obowiązujące
 zasady pracy: [AGENTS.md](../AGENTS.md) i [GIT-FLOW.md](../GIT-FLOW.md).
+
+Smoke nie wczytuje pliku .env; przy ochronie MCP operator musi przekazać MCP_AUTH_TOKEN w środowisku procesu testowego. Nigdy nie wypisuj wartości.

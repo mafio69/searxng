@@ -77,4 +77,8 @@ async def web_search(query: str, max_results: int = 5) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http")
+    import uvicorn
+    from access import McpAccessMiddleware
+
+    app = McpAccessMiddleware(mcp.streamable_http_app(), os.getenv("MCP_AUTH_TOKEN", ""))
+    uvicorn.run(app, host=HOST, port=PORT, access_log=False)

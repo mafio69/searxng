@@ -11,10 +11,11 @@ from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
+from access import McpAccessMiddleware
 from server import HOST, PORT, mcp, web_search
 
 
-def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
+def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, mcp_auth=None):
     assets = Path(static_dir) if static_dir else Path(__file__).resolve().parent / "static"
 
     async def search_endpoint(request: Request):
@@ -68,6 +69,9 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
 
     # Reuse FastMCP's application, including its existing session-manager lifespan.
     app = mcp.streamable_http_app()
+    app.add_middleware(McpAccessMiddleware, auth_value=(
+        os.getenv("MCP_AUTH_TOKEN", "") if mcp_auth is None else mcp_auth
+    ))
     trusted_hosts = allowed_hosts if allowed_hosts is not None else [
         host.strip() for host in os.getenv(
             "SEARCH_ALLOWED_HOSTS", "127.0.0.1,localhost,mcp-search"

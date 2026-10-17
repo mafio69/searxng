@@ -38,6 +38,7 @@ Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG m
 | Zmienna | Domyślne zachowanie / zastosowanie |
 |---|---|
 | `SEARXNG_SECRET` | Wymagany nowy losowy klucz SearXNG, ustawiany wyłącznie lokalnie; Compose nie wystartuje bez wartości |
+| `MCP_AUTH_TOKEN` | Opcjonalny sekret Bearer dla wszystkich żądań `/mcp`; konfiguruj tylko lokalnie, nigdy w kodzie UI |
 | `PPLX_API_KEY` | Opcjonalny klucz Perplexity; brak uniemożliwia użycie źródła awaryjnego |
 | `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit prób Perplexity rezerwowanych w procesie |
 | `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania |
@@ -76,6 +77,8 @@ W kliencie obsługującym **MCP Streamable HTTP** dodaj adres właściwy dla jeg
 |---|---|
 | Na tym samym hoście co Docker | `http://127.0.0.1:8890/mcp` |
 | W kontenerze podłączonym do sieci `ai` | `http://mcp-search:8000/mcp` |
+
+Jeżeli operator ustawił `MCP_AUTH_TOKEN`, klient musi wysyłać `Authorization: Bearer <wartość z bezpiecznej konfiguracji>` w każdym żądaniu MCP, także podczas inicjalizacji, odczytu strumienia i zamykania sesji. Bez konfiguracji ochrona jest wyłączona. Dotyczy tylko MCP; udostępnienie całego UI/API poza zaufaną siecią wymaga osobnej kontroli dostępu.
 
 Po inicjalizacji sesji klient znajdzie narzędzie:
 

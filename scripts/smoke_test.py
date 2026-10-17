@@ -1,6 +1,7 @@
 """Check a running deployment without dependencies or paid provider calls."""
 import argparse
 import json
+import os
 from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlsplit
 from urllib.request import Request, urlopen
@@ -22,9 +23,10 @@ class Assets(HTMLParser):
 
 
 class SmokeTest:
-    def __init__(self, base_url):
+    def __init__(self, base_url, mcp_auth=""):
         self.base = base_url.rstrip('/') + '/'
         self.session = {}
+        self.auth = {"Authorization": "Bearer " + mcp_auth} if mcp_auth else {}
 
     def request(self, path, payload=None, expected=200, headers=None):
         request = Request(urljoin(self.base, path.lstrip('/')),
@@ -45,7 +47,7 @@ class SmokeTest:
         if identifier is not None:
             payload['id'] = identifier
         body, headers = self.request('/mcp', payload, 202 if identifier is None else 200,
-                                     {'Accept': 'application/json, text/event-stream', **self.session})
+                                     {'Accept': 'application/json, text/event-stream', **self.session, **self.auth})
         if headers.get('Mcp-Session-Id'):
             self.session['Mcp-Session-Id'] = headers['Mcp-Session-Id']
         if identifier is None:
@@ -102,7 +104,7 @@ def main():
     parser.add_argument('--query', help='Opt in to real search; may incur Perplexity costs')
     args = parser.parse_args()
     try:
-        SmokeTest(args.url).run(args.query)
+        SmokeTest(args.url, os.getenv("MCP_AUTH_TOKEN", "")).run(args.query)
     except (AssertionError, URLError, ValueError, KeyError, StopIteration, TimeoutError) as error:
         print(f'FAIL {type(error).__name__}: deployment check failed; verify URL, containers and Docker network ai')
         return 1

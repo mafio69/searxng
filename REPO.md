@@ -45,3 +45,5 @@ Klient MCP → /mcp ────────┘
 - `python mcp/server.py` uruchamia samo MCP; pełna aplikacja startuje przez `mcp/web_app.py`. Frontend jest kopiowany do obrazu podczas budowania.
 - FastMCP session manager uruchamia się raz na instancję; testy aplikacji izolują instancje MCP.
 - Dane robocze/cache/testy tymczasowe trafiają do ignorowanego `.local/`; nie czytać `.local/secret/`.
+
+- Opcjonalny MCP_AUTH_TOKEN chroni wszystkie metody /mcp (także samodzielny entrypoint). Bez konfiguracji zachowany jest dotychczasowy tryb. Nie jest to logowanie do przeglądarkowego UI/API.
