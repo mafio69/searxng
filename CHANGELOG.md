@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### S4 — Bezpieczne kody błędów dostawców — 2026-10-18
+- Odpowiedź MCP zwraca kontrolowane kody timeout/http_error/error i lokalne no_key/limit. Testy podkładają wyjątki z prywatnym tekstem i sprawdzają brak ich treści w odpowiedzi.
+- Walidacja: backend 33/33, frontend 17/17, build i diff-check PASS.
+
 ### K3 — Przypięcie MCP i negocjacja protokołu — 2026-10-18
 - Biblioteka mcp==1.30.0 w mcp/requirements.txt. Test rzeczywistego initialize potwierdza wszystkie cztery wersje akceptowane przez WirralAI; nieznana wersja negocjuje 2025-11-25.
 - Walidacja: backend 32/32, frontend 17/17, build i diff-check PASS.

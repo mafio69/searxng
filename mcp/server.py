@@ -15,6 +15,20 @@ _pplx = {"day": None, "count": 0}
 _pplx_lock = Lock()
 
 
+class ProviderUnavailable(RuntimeError):
+    """Controlled local reason; never carries provider response details."""
+
+
+def _error_code(provider, error):
+    if isinstance(error, ProviderUnavailable):
+        return str(error)
+    if isinstance(error, httpx.TimeoutException):
+        return provider + "_timeout"
+    if isinstance(error, httpx.HTTPError):
+        return provider + "_http_error"
+    return provider + "_error"
+
+
 async def _searxng(q: str, n: int) -> list[dict]:
     async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
         r = await client.get(
@@ -32,7 +46,7 @@ async def _searxng(q: str, n: int) -> list[dict]:
 
 async def _perplexity(q: str, n: int) -> list[dict]:
     if not PPLX_KEY:
-        raise RuntimeError("brak PPLX_API_KEY")
+        raise ProviderUnavailable("perplexity_no_key")
     today = datetime.date.today().isoformat()
     # Reserve before HTTP. Failures/cancellation may still have incurred costs.
     # The lock never covers network I/O or an await.
@@ -40,7 +54,7 @@ async def _perplexity(q: str, n: int) -> list[dict]:
         if _pplx["day"] != today:
             _pplx.update(day=today, count=0)
         if _pplx["count"] >= PPLX_DAILY_LIMIT:
-            raise RuntimeError("dzienny limit Perplexity wyczerpany")
+            raise ProviderUnavailable("perplexity_limit")
         _pplx["count"] += 1
     async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
         r = await client.post(
@@ -65,14 +79,13 @@ async def web_search(query: str, max_results: int = 5) -> str:
         res = await _searxng(query, n)
         if res:
             return json.dumps({"source": "searxng", "results": res}, ensure_ascii=False)
-        errors.append("searxng: pusty wynik")
     except Exception as e:
-        errors.append(f"searxng: {e}")
+        errors.append(_error_code("searxng", e))
     try:
         res = await _perplexity(query, n)
         return json.dumps({"source": "perplexity-fast", "results": res}, ensure_ascii=False)
     except Exception as e:
-        errors.append(f"perplexity: {e}")
+        errors.append(_error_code("perplexity", e))
     return json.dumps({"source": None, "results": [], "errors": errors}, ensure_ascii=False)
 
 

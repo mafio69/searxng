@@ -205,7 +205,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
     @patch.object(server.httpx.AsyncClient, "post", new_callable=AsyncMock)
     async def test_missing_key_prevents_paid_request(self, post):
         with patch.object(server, "PPLX_KEY", ""):
-            with self.assertRaisesRegex(RuntimeError, "brak PPLX_API_KEY"):
+            with self.assertRaisesRegex(RuntimeError, "perplexity_no_key"):
                 await server._perplexity("query", 1)
         post.assert_not_called()
 
