@@ -2,6 +2,8 @@
 
 Aktualizacja: 2026-10-18.
 
+- Stabilne 1.0.0 czeka na pozytywną opinię WirralAI o integracji MCP, zgodnie z decyzją Mariusza. Akceptacji jeszcze nie otrzymano; nadal wymagane są pozostałe otwarte kontrole wdrożenia.
+
 - Etapy kodu audytu S1–S5, K1–K4, Q1–Q3 wykonane. Każdy punkt: testy, commit i lokalny merge do develop; powrót na gałąź audytu. Bez push.
 - Obowiązkowa kontrola przed commitem: python3 scripts/check_project.py. Ruff 0.17.1 lokalnie, stała zgoda dla agentów w AGENTS.md.
 - Ruff PASS, backend 46/46, frontend 18/18, build i diff-check roboczy/staged PASS. Testy offline.

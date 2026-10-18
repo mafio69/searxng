@@ -4,6 +4,13 @@ Data: 2026-10-18. Raport z lokalnych testów kodu repozytorium, bez rzeczywistyc
 zapytań do wyszukiwarek. Nie potwierdza aktualizacji działającego kontenera
 ani wykonania testów klienta WirralAI.
 
+Warunek stabilnego wydania 1.0.0 ustalony przez Mariusza: **wymagana pozytywna
+opinia WirralAI po teście integracji MCP**. Status: oczekujemy na akceptację.
+Potwierdzenie powinno wskazać testowane wersje/commity klienta i serwera oraz wynik
+połączenia, wywołania narzędzia i rozróżnienia `ok`/`empty`/`error`, bez sekretów,
+danych użytkowników i logów rzeczywistych zapytań. Pozostałe kontrole wdrożenia
+pozostają wymagane.
+
 ## Biblioteka i protokół
 
 - Przypięta biblioteka: `mcp==1.30.0` w `mcp/requirements.txt`.

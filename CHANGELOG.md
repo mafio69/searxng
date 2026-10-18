@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Akceptacja MCP przed 1.0.0 — 2026-10-18
+- Zapisano warunek Mariusza: stabilne 1.0.0 wymaga pozytywnej opinii WirralAI po teście integracji MCP. Akceptacja pozostaje otwarta; testy serwera jej nie zastępują.
+
 ### Q3 — Czytelne walidatory i obowiązkowy Ruff — 2026-10-18
 - Rozdzielono importy i wydzielono walidatory wyników Python/JS. Dodano przypięty Ruff 0.17.1 jako narzędzie wyłącznie deweloperskie.
 - Dodano scripts/check_project.py: Ruff, unittest, Vitest, build i kontrola diff roboczego/staged. Błąd lub brak narzędzia zatrzymuje kontrolę; trzy testy zabezpieczają ten przebieg.

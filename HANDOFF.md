@@ -11,5 +11,6 @@ Aktualizacja: 2026-10-18.
 - S1: operator musi ustawić nowy SEARXNG_SECRET i potwierdzić start. Stary klucz pozostaje w historii Git; nie używać go. Nie czytano ani nie zmieniano rzeczywistego .env i wartości sekretów. Nie przepisano historii.
 - S5: runtime UID/build niepotwierdzone — brak dostępu do docker.sock. Obraz deklaruje UID 10001:10001; SearXNG ma stały digest. Nie uruchamiano sudo ani wdrożenia.
 - K1/K4: klient WirralAI musi wykonać własne testy wspólnego docs/contract/web_search.example.json; nie zmieniano drugiego repozytorium.
+- Warunek stabilnego wydania 1.0.0 ustalony przez Mariusza: wymagana jest pozytywna opinia projektu WirralAI po teście integracji MCP. Status: oczekujemy. Zielone testy searxng nie zastępują tej akceptacji; pozostałe kontrole wdrożenia nadal obowiązują.
 - Q1: licznik Perplexity jest atomowy tylko w jednym procesie, nietrwały; restart zeruje limit.
 - Lokalny dawny searxng-settings.yml pozostaje ignorowany, bez odczytu i modyfikacji. Diagnostyka HTTP w .local/tmp/http/. Nie czytać .local/secret/.
