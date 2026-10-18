@@ -1,5 +1,9 @@
 # Instrukcja: SearXNG + MCP Search
 
+> Nowe integracje aplikacji zaczynaj od [instrukcja-integracji-mcp-search.md](instrukcja-integracji-mcp-search.md).
+> Poniżej pozostawiono starsze materiały operacyjne; nie są aktualnym kontraktem
+> statusów ani wersji zależności. Aktualny kontrakt: [MCP-USAGE.md](MCP-USAGE.md).
+
 ## Co to jest
 
 Dwa kontenery na sieci `ai`:

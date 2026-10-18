@@ -1,5 +1,7 @@
 # MCP Search — instrukcja dla AI i integratorów
 
+Wdrażasz MCP Search w aplikacji? Zacznij od [instrukcji integracji dla agenta](instrukcja-integracji-mcp-search.md): wybór adresu, wdrożenie i testy krok po kroku. Ten dokument jest szczegółowym kontraktem usługi.
+
 ## Cel i zakres
 
 Serwer udostępnia jedno narzędzie MCP: `web_search`. Wyszukuje przez SearXNG,

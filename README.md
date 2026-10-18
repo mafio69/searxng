@@ -188,6 +188,7 @@ Do pracy nad frontendem służy `npm --prefix web run dev`. Serwer Vite przekazu
 
 ## Dokumentacja
 
+- [Instrukcja integracji MCP Search dla agenta](docs/instrukcja-integracji-mcp-search.md) — start wdrożenia w aplikacji, aktualne adresy HTTP, sesja MCP i testy odbioru.
 - [MCP dla AI i integratorów](docs/MCP-USAGE.md) — kontrakt narzędzia, protokół, błędy i plan testu integracyjnego.
 - [Instrukcja integracji](docs/INSTRUKCJA.md) — przykłady klientów; zawiera także starsze ścieżki środowiska autora, które należy dostosować.
 - [Stan projektu](STATUS.md) i [historia zmian](CHANGELOG.md).

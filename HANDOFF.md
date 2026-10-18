@@ -2,6 +2,9 @@
 
 Aktualizacja: 2026-10-18.
 
+- Dokumentacja integracji K4: docs/instrukcja-integracji-mcp-search.md jest punktem startowym dla agenta aplikacji. Zawiera ustalone adresy HTTP host/Docker, sesję MCP, przykład klienta 1.30.0, trzy stany i testy całej pętli model–narzędzie–UI. Domena wyszukaj.dom pozostaje planowana; nie wdrażano DNS/proxy. Bez nowych zależności, rzeczywistych wyszukiwań i zmian drugiego repozytorium.
+- Weryfikacja instrukcji: składnia przykładu Pythona, JSON zgodny ze wspólnymi fixtures i odsyłacze lokalne PASS. Dokładny przykład uruchomiono na lokalnym działającym MCP bez --live: initialize/tools/list PASS, protocol 2025-11-25. Pełne kontrole: Ruff, backend 46/46, frontend 18/18, build i diff-check PASS. Nie wykonano rzeczywistego wyszukiwania ani odbioru z WirralAI.
+
 - Pracujemy na docs/audyt-2026-10-17. Każdy punkt: testy → commit → lokalny merge do develop → powrót. Bez push i bez usuwania gałęzi.
 - Q3 zakończone w kodzie: rozdzielone importy, nazwane walidatory w Python/JS. Ruff 0.17.1 jest przypięty w requirements-dev.txt, zainstalowany wyłącznie w ignorowanym .local/tools/ruff i włączony do python3 scripts/check_project.py.
 - Mariusz zatwierdził instalację Ruff, stałe kontrole przed commitem i allow używania przez agentów. Zapis w AGENTS.md, bez zmiany opencode ani konfiguracji uprawnień. Domyślnie bez --fix; chronione ścieżki wykluczone.

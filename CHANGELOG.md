@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Instrukcja integracji MCP Search dla agentów — 2026-10-18
+- Dodano docs/instrukcja-integracji-mcp-search.md: ustalone endpointy HTTP, integrację backendu i pętli narzędzia, trzy stany wyniku, sondę połączenia bez wyszukiwania oraz testy odbioru aplikacji.
+- Wskazano jeden punkt konfiguracji przyszłej domeny wyszukaj.dom i odróżniono test bezpłatny od rzeczywistego wyszukiwania z możliwym kosztem fallbacku.
+- Dodano odsyłacze z README, mapy repo i pozostałych instrukcji. Pozytywna opinia WirralAI pozostaje warunkiem stabilnego 1.0.0.
+- Weryfikacja: przykład klienta initialize/tools/list PASS na lokalnej usłudze (2025-11-25), składnia/JSON/odsyłacze PASS; Ruff, 46 testów backendu, 18 frontendu i build PASS. Bez rzeczywistego wyszukiwania.
+
 ### Akceptacja MCP przed 1.0.0 — 2026-10-18
 - Zapisano warunek Mariusza: stabilne 1.0.0 wymaga pozytywnej opinii WirralAI po teście integracji MCP. Akceptacja pozostaje otwarta; testy serwera jej nie zastępują.
 
