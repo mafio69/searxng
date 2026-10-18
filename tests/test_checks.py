@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from check_project import main
+from check_tracked_files import scan_tracked_files
 
 
 class ProjectCheckTests(unittest.TestCase):
@@ -30,7 +31,8 @@ class ProjectCheckTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(main(Path(directory)), 0)
                 commands = [call.args[0] for call in run.call_args_list]
-                self.assertEqual(len(commands), 6)
+                self.assertEqual(len(commands), 7)
+                self.assertIn("scripts/check_tracked_files.py", commands[1])
                 self.assertEqual(commands[-1], ["git", "diff", "--cached", "--check"])
 
     def test_missing_tool_blocks_the_gate(self):
@@ -39,3 +41,41 @@ class ProjectCheckTests(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(main(Path(directory)), 1)
                 self.assertEqual(run.call_count, 1)
+
+    def test_repository_tracked_files_are_clean(self):
+        self.assertEqual(scan_tracked_files(ROOT), [])
+
+    def test_scanner_detects_forbidden_files_and_synthetic_credentials_without_leaking_values(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / ".local/tmp") as directory:
+            root = Path(directory)
+            (root / ".env.example").write_text("SEARXNG_SECRET=synthetic_value\n", encoding="utf-8")
+            (root / "searxng-settings.example.yml").write_text("  secret_key: synthetic_hex_value\n", encoding="utf-8")
+            (root / "sample.txt").write_text("pplx-" + "1234567890abcdef1234\n", encoding="utf-8")
+            (root / "opencode.json").write_text("pplx-ignored-in-policy-file\n", encoding="utf-8")
+            findings = scan_tracked_files(
+                root,
+                [
+                    ".env",
+                    "searxng-settings.yml",
+                    "project.geany",
+                    "certs/server.pem",
+                    ".env.example",
+                    "searxng-settings.example.yml",
+                    "sample.txt",
+                    "opencode.json",
+                ],
+            )
+            self.assertEqual(
+                findings,
+                [
+                    ".env: forbidden_tracked_file",
+                    "searxng-settings.yml: forbidden_tracked_file",
+                    "project.geany: forbidden_tracked_file",
+                    "certs/server.pem: forbidden_tracked_file",
+                    ".env.example:1: non_empty_env_template",
+                    "searxng-settings.example.yml:1: populated_searxng_secret_key",
+                    "sample.txt:1: perplexity_key",
+                ],
+            )
+            self.assertNotIn("synthetic_value", "\n".join(findings))
+            self.assertNotIn("1234567890abcdef1234", "\n".join(findings))
