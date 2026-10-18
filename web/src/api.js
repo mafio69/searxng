@@ -1,3 +1,15 @@
+function isValidItem(item) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+  return ['title', 'url', 'snippet'].every(field => item[field] == null || typeof item[field] === 'string');
+}
+
+export function isValidResult(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+  if (!['searxng', 'perplexity-fast', null].includes(data.source)) return false;
+  if (!Array.isArray(data.results)) return false;
+  return data.results.every(isValidItem);
+}
+
 export async function search(query, maxResults, signal) {
   const response = await fetch('/api/search', {
     method: 'POST',
@@ -9,10 +21,7 @@ export async function search(query, maxResults, signal) {
     ? 'Sprawdź zapytanie i spróbuj ponownie.'
     : 'Wyszukiwarka jest chwilowo niedostępna. Spróbuj ponownie za moment.');
   const data = await response.json();
-  if (!data || !['searxng', 'perplexity-fast', null].includes(data.source) ||
-      !Array.isArray(data.results) || data.results.some(item =>
-        !item || typeof item !== 'object' || Array.isArray(item) ||
-        ['title', 'url', 'snippet'].some(field => item[field] != null && typeof item[field] !== 'string'))) throw new Error('Nie udało się odczytać wyników wyszukiwania.');
+  if (!isValidResult(data)) throw new Error('Nie udało się odczytać wyników wyszukiwania.');
   return data;
 }
 

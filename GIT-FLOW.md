@@ -4,6 +4,8 @@
 
 Przed każdym commitem pełny zestaw testów wymagany przez repozytorium musi być zielony. Czerwone testy, linting, typecheck lub skaner bezpieczeństwa blokują commit i push.
 
+Obowiązkowe polecenie przed commitem: `python3 scripts/check_project.py`. Obejmuje Ruff, testy backendu i frontendu, build oraz kontrolę zmian Git. Brak narzędzia lub niezerowy wynik blokuje commit. Stała zgoda na uruchamianie tej kontroli i Ruff jest zapisana w AGENTS.md.
+
 ## Obowiązkowa kolejność zwykłego zadania
 
 1. Przeczytaj: README.md, REPO.md, STATUS.md, CHANGELOG.md, AGENTS.md i na końcu HANDOFF.md, jeśli istnieją.

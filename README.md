@@ -157,16 +157,32 @@ Backend obrazu używa Python 3.12, FastMCP v1, HTTPX i Starlette. Frontend to Re
 | `web/src/App.test.jsx` | Testy interfejsu |
 | `docker-compose.yml` | Dwie usługi i ich połączenie |
 
-Po zainstalowaniu zależności backendu z `mcp/requirements.txt` oraz frontendu z `web/package.json` dostępne kontrole to:
+Po zainstalowaniu zależności backendu z `mcp/requirements.txt` oraz frontendu z `web/package.json` dodaj lokalne narzędzie deweloperskie Ruff (nie jest instalowane w obrazie aplikacji):
 
 ```bash
-python -m unittest discover -s tests -v
+mkdir -p .local/tmp/pip
+TMPDIR="$PWD/.local/tmp/pip" python3 -m pip install --only-binary=:all: --no-deps --target .local/tools/ruff --cache-dir .local/cache/pip -r requirements-dev.txt
+```
+
+Przed każdym commitem uruchom pełną kontrolę:
+
+```bash
+python3 scripts/check_project.py
+```
+
+Runner sprawdza kolejno Ruff, testy backendu, testy frontendu, build i zmiany Git (robocze oraz staged). Błąd lub brak narzędzia blokuje commit. Raporty pozostają w ignorowanym `.local/logs/checks/`; nie publikuj ich bez sprawdzenia. Nie wczytuje `.env` ani nie wykonuje rzeczywistych wyszukiwań. Agenci mają stałą zgodę na tę kontrolę zgodnie z AGENTS.md.
+
+Poszczególne kontrole można uruchomić osobno diagnostycznie:
+
+```bash
+PYTHONPATH=.local/tools/ruff python3 -m ruff check --config ruff.toml mcp scripts tests
+python3 -m unittest discover -s tests -v
 npm --prefix web test
 npm --prefix web run build
 git diff --check
 ```
 
-Repozytorium nie definiuje osobnego kompletnego zestawu lintingu, typechecka i skanowania bezpieczeństwa.
+Ruff sprawdza błędy Pythona i podstawowy styl; nie zastępuje testów, skanowania sekretów ani audytu bezpieczeństwa. Domyślna kontrola nie poprawia plików automatycznie. Instalacja narzędzia niesie zwykłe ryzyko zależności zewnętrznej; przypięta wersja i oddzielenie od aplikacji ograniczają zakres. `--fix`, formatowanie i szczególnie `--unsafe-fixes` mogą zmienić kod — zasady ich używania opisuje AGENTS.md.
 
 Do pracy nad frontendem służy `npm --prefix web run dev`. Serwer Vite przekazuje `/api` do backendu pod `http://127.0.0.1:8890`; backend musi być uruchomiony osobno.
 

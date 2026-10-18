@@ -15,6 +15,23 @@ from access import McpAccessMiddleware
 from server import HOST, PORT, mcp, web_search
 
 
+def is_valid_result(result):
+    if not isinstance(result, dict):
+        return False
+    if result.get("source") not in ("searxng", "perplexity-fast", None):
+        return False
+    items = result.get("results")
+    if not isinstance(items, list):
+        return False
+    fields = ("title", "url", "snippet")
+    for item in items:
+        if not isinstance(item, dict):
+            return False
+        if any(item.get(field) is not None and not isinstance(item[field], str) for field in fields):
+            return False
+    return True
+
+
 def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, mcp_auth=None):
     assets = Path(static_dir) if static_dir else Path(__file__).resolve().parent / "static"
 
@@ -45,12 +62,7 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
             return JSONResponse({"error": "Invalid search arguments"}, status_code=400)
         try:
             result = json.loads(await search_service(query.strip(), count))
-            if (not isinstance(result, dict)
-                    or result.get("source") not in ("searxng", "perplexity-fast", None)
-                    or not isinstance(result.get("results"), list)
-                    or any(not isinstance(item, dict) or any(
-                        item.get(field) is not None and not isinstance(item[field], str)
-                        for field in ("title", "url", "snippet")) for item in result["results"])):
+            if not is_valid_result(result):
                 raise ValueError("Invalid search result")
         except Exception:
             return JSONResponse({"error": "Search unavailable"}, status_code=502)

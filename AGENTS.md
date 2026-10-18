@@ -22,6 +22,14 @@ Te reguły obowiązują każdego agenta AI w tym repozytorium. Gdy polecenie jes
 
 ## 3. Środowisko i narzędzia jakości
 
+### Stała zgoda Mariusza: Ruff — allow
+
+- Agenci mogą bez ponownego pytania uruchamiać `python3 scripts/check_project.py` oraz lokalny `PYTHONPATH=.local/tools/ruff python3 -m ruff check --config ruff.toml mcp scripts tests` w tym repozytorium. To zgoda na kontrole jakości, nie na pozostałe działania systemowe lub zewnętrzne.
+- Instalacja przypiętej wersji z `requirements-dev.txt` do ignorowanego `.local/tools/ruff`, z cache i plikami tymczasowymi w `.local/`, została zatwierdzona przez Mariusza. Ruff nie jest zależnością obrazu aplikacji.
+- Przed każdym commitem obowiązuje cały zestaw `python3 scripts/check_project.py`; brak Ruff lub błąd dowolnej kontroli blokuje commit. Sam lint nie zastępuje testów.
+- Domyślnie używaj `check` bez `--fix`. Automatyczne poprawki i formatowanie są zmianami kodu: tylko w zakresie zadania, z przeglądem diff i pełnymi testami. Nie używaj `--unsafe-fixes` bez wyraźnego zlecenia.
+- Analizuj wyłącznie kod projektu w `mcp`, `scripts`, `tests`, według `ruff.toml`. Zgoda nie obejmuje odczytu sekretów, wyłączania reguł bezpieczeństwa ani zmiany konfiguracji uprawnień agentów.
+
 1. Do testów, lintingu, typechecka, buildów, formatowania i lokalnych narzędzi jakości stosuj polecenia opisane w `README.md` i `REPO.md`, z zachowaniem wymaganych zgód na Bash.
 2. Uruchamianie testów i kontroli jakości nie daje zgody na migracje, seedowanie, usuwanie lub zmianę danych, deployment, push, PR, instalację zależności ani działania zewnętrzne. Te czynności nadal wymagają wyraźnej zgody Mariusza.
 3. Nie analizuj, nie lokalizuj, nie czytaj, nie przeszukuj, nie kopiuj, nie wyjaśniaj ani nie modyfikuj wrapperów środowiska, ich dowiązań, aliasów, funkcji powłoki, konfiguracji ani sposobu działania.

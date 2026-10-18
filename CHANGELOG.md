@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Q3 — Czytelne walidatory i obowiązkowy Ruff — 2026-10-18
+- Rozdzielono importy i wydzielono walidatory wyników Python/JS. Dodano przypięty Ruff 0.17.1 jako narzędzie wyłącznie deweloperskie.
+- Dodano scripts/check_project.py: Ruff, unittest, Vitest, build i kontrola diff roboczego/staged. Błąd lub brak narzędzia zatrzymuje kontrolę; trzy testy zabezpieczają ten przebieg.
+- Zapisano zatwierdzone przez Mariusza allow dla agentów i obowiązek kontroli przed commitem. Bez automatycznych poprawek i bez zmian zależności obrazu aplikacji.
+- Dodano raport zgodności MCP dla WirralAI w docs/contract/MCP-COMPATIBILITY.md.
+- Walidacja: Ruff PASS, backend 46/46, frontend 18/18, build i diff-check roboczy/staged PASS.
+
 ### K1-UI — Stan pusty również w przeglądarce — 2026-10-18
 - Usunięto pozostałe utożsamienie source null z awarią w React. status empty wyświetla brak wyników bez alarmu. Test regresji zachowuje rozróżnienie starszych odpowiedzi bez statusu.
 - Walidacja: backend 43/43, frontend 18/18, build i diff-check PASS.

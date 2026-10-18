@@ -30,6 +30,8 @@ Klient MCP → /mcp ────────┘
 - Testy backendu po instalacji `mcp/requirements.txt`: `python3 -m unittest discover -s tests -v`.
 - Testy i build frontendu po `npm --prefix web ci`: `npm --prefix web test`, `npm --prefix web run build`.
 - Kontrola zmian: `git diff --check`.
+- Pełna obowiązkowa kontrola przed commitem: `python3 scripts/check_project.py` — Ruff → unittest → Vitest → build → diff-check roboczy i staged. Pierwszy błąd kończy kontrolę kodem 1; raporty pozostają w `.local/logs/checks/`.
+- Ruff jest przypięty w `requirements-dev.txt`, konfigurowany w `ruff.toml`, instalowany lokalnie w `.local/tools/ruff`. Runner korzysta także z istniejących lokalnych zależności backendu w `.local/python`, jeśli są zainstalowane. Brak narzędzia blokuje kontrolę; nie ma automatycznego pobierania ani auto-fix.
 - Smoke: `python3 scripts/smoke_test.py`; opcja `--query` wykonuje rzeczywiste wyszukiwanie i może użyć płatnego Perplexity.
 - Development UI: `npm --prefix web run dev`, proxy `/api` do backendu na porcie 8890.
 
