@@ -2,6 +2,8 @@
 
 Aktualizacja: 2026-10-18.
 
+- NASTĘPNY AGENT: plan doprowadzenia do 1.0.0 bez nowych funkcji — docs/release-1.0.0-plan.md (blokery R1–R4, poprawki dokumentacji D1–D8, kontrola UI W1–W3, optymalizacje O1–O7 ze źródłami). Plik nie jest jeszcze w commicie. Bieżąca gałąź chore/secret-scan-and-s1-s5 zawiera cudze niezacommitowane zmiany — nie mieszać z zadaniami planu.
+
 - Dokumentacja integracji K4: docs/instrukcja-integracji-mcp-search.md jest punktem startowym dla agenta aplikacji. Zawiera ustalone adresy HTTP host/Docker, sesję MCP, przykład klienta 1.30.0, trzy stany i testy całej pętli model–narzędzie–UI. Domena wyszukaj.dom pozostaje planowana; nie wdrażano DNS/proxy. Bez nowych zależności, rzeczywistych wyszukiwań i zmian drugiego repozytorium.
 - Weryfikacja instrukcji: składnia przykładu Pythona, JSON zgodny ze wspólnymi fixtures i odsyłacze lokalne PASS. Dokładny przykład uruchomiono na lokalnym działającym MCP bez --live: initialize/tools/list PASS, protocol 2025-11-25. Pełne kontrole: Ruff, backend 46/46, frontend 18/18, build i diff-check PASS. Nie wykonano rzeczywistego wyszukiwania ani odbioru z WirralAI.
 

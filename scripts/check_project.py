@@ -19,6 +19,7 @@ def main(root=ROOT):
     python = [sys.executable, "-X", "pycache_prefix=.local/cache/pycache"]
     checks = [
         ("ruff", python + ["-m", "ruff", "check", "--config", "ruff.toml", "mcp", "scripts", "tests"]),
+        ("tracked-files", python + ["scripts/check_tracked_files.py"]),
         ("backend", python + ["-c", (
             "import logging,sys,unittest;logging.disable(logging.CRITICAL);"
             "suite=unittest.defaultTestLoader.discover('tests');"
