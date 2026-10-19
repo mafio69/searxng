@@ -2,6 +2,24 @@
 
 Aktualizacja: 2026-10-20.
 
+## Przypomnienie na następną sesję (propozycje dla Mariusza — przypomnieć na starcie!)
+
+1. **Porządek pod audyty (`qodana.yaml`, `composer.json`, `.run/`)**:
+   - Ustawić w `qodana.yaml` właściwy linter pod Python/JS (zamiast domyślnego `jetbrains/qodana-php:2026.2`) i wykluczyć `.local/`, `web/node_modules/`, `web/dist/`.
+   - Usunąć zbędny pusty `composer.json` (chyba że ma służyć pod GrumPHP) oraz dodać `.run/` do `.gitignore`, aby lokalne konfiguracje uruchomieniowe PhpStorma nie trafiały do publicznego repozytorium.
+2. **GitHub Actions CI (`.github/workflows/ci.yml`)**:
+   - Lekki workflow uruchamiający `python3 scripts/check_project.py` (Ruff + skaner sekretów `check_tracked_files.py` + testy Python + testy Vitest + `vite build`) na PR do `develop` i `master` + zielona odznaka CI w `README.md`.
+3. **Endpoint `GET /healthz` także dla `mcp-search`**:
+   - Dodać route `/healthz` w `mcp/web_app.py` (zwracający `200 {"status": "ok"}`) oraz `healthcheck` dla usługi `mcp-search` w `docker-compose.yml` pod monitoring Dockera i Traefika.
+4. **Trwały dzienny licznik Perplexity na dysku (`Q1`)**:
+   - Zapisywać licznik `_pplx` (`day`, `count`) z `mcp/server.py` atomowo do małego pliku JSON w `.local/logs/` lub `.local/cache/`, aby restart kontenera `mcp-search` nie zerował dziennego limitu płatnego API.
+5. **Krótki cache in-memory (`TTL 30–60 s`) dla identycznych zapytań (`W1`)**:
+   - Mały słownik LRU (np. do 64 wpisów na 60 s) w `mcp/server.py`, chroniący przed duplikatami zapytań przy odświeżeniu strony lub powtórnym wywołaniu `web_search` przez agenta.
+6. **Obsługa parametru `?q=...` w URL (`http://szukaj.dom/?q=hasło`)**:
+   - Odczyt parametru `q` przy starcie `web/src/App.jsx`, aby można było ustawić `http://szukaj.dom/?q=%s` jako domyślną wyszukiwarkę w pasku adresu przeglądarki.
+
+---
+
 - Stan na zamknięcie sesji (`develop` @ `bbb1943` + aktualizacja dokumentacji):
   - Domknięto i scalono `chore/secret-scan-and-s1-s5` (`2079165`) oraz `fix/gitguardian-false-positive-test` (`6acba93` / `5bdfc9d`): skaner śledzonych plików i indeksu Git `scripts/check_tracked_files.py` (w tym wykrywanie literałów `*_PASSWORD=`, `*_SECRET=`, `*_TOKEN=`, `*_API_KEY=` w kodzie i testach), usunięcie `searxng.geany` ze śledzenia oraz wyeliminowanie false-positive GitGuardiana w `tests/test_checks.py`.
   - `D1–D8` (`docs/release-1.0.0-docs`, `b65dd2d`): ujednolicono dokumentację w `docs/INSTRUKCJA.md`, `docs/MCP-USAGE.md`, `README.md` oraz wersję `0.1.0` w `web/package.json` i `web/package-lock.json` (do czasu wydania `1.0.0`).
