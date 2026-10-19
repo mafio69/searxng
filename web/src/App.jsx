@@ -123,7 +123,7 @@ export default function App() {
     <a className="skip-link" href="#main">Przejdź do wyszukiwarki</a>
     {sidebarOpen && <button className="sidebar-backdrop" aria-label="Zamknij historię" onClick={() => setSidebarOpen(false)} />}
     <aside ref={sidebar} id="search-history" inert={mobile && !sidebarOpen} role={mobileOpen ? 'dialog' : undefined} aria-modal={mobileOpen ? true : undefined} className={`sidebar ${sidebarOpen ? 'is-open' : ''}`} aria-label="Historia wyszukiwania">
-      <button className="brand" onClick={resetSearch} aria-label="Szukaj — strona główna"><span className="brand-mark"><Icon name="search" size={24} /></span><span>szukaj<span className="brand-dot">.</span></span></button>
+      <button className="brand" onClick={resetSearch} aria-label="Szukaj — strona główna"><span className="brand-mark"><Icon name="search" size={24} /></span><span>szukaj<span className="brand-dot">.</span>dom</span></button>
       <button className="new-search" onClick={resetSearch}><Icon name="plus" size={18} /> Nowe wyszukiwanie <kbd>⌘ / Ctrl K</kbd></button>
       <div className="history-heading"><span>TWOJA HISTORIA</span><Icon name="clock" size={15} /></div>
       <div className="history-list">

@@ -2,7 +2,7 @@
 
 ## Przeznaczenie i architektura
 
-Agent wdrażający wyszukiwanie w aplikacji zaczyna od [instrukcji integracji MCP Search](docs/instrukcja-integracji-mcp-search.md). Dokument rozstrzyga wybór obecnego endpointu HTTP i opisuje test pełnej pętli narzędzia; przyszła domena wyszukaj.dom nie jest jeszcze adresem wdrożonym.
+Agent wdrażający wyszukiwanie w aplikacji zaczyna od [instrukcji integracji MCP Search](docs/instrukcja-integracji-mcp-search.md). Dokument rozstrzyga wybór obecnego endpointu HTTP i opisuje test pełnej pętli narzędzia; domena `szukaj.dom` działa dla strony WWW, natomiast dla MCP obowiązują stałe adresy HTTP z tabeli.
 
 MVP 1.0: wyszukiwanie dla użytkowników przeglądarki i klientów MCP. Bez generowania odpowiedzi modelem i bez pobierania pełnej treści stron.
 
