@@ -1,104 +1,126 @@
-# szukaj. — Twoja wyszukiwarka, także dla AI
+# szukaj (`szukaj.dom`) — Twoja wyszukiwarka, także dla AI
 
-**Wielki internet. Twoje pytania. Jeden punkt dostępu dla Ciebie i Twoich agentów AI.**
+![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)
+![MCP 1.30.0](https://img.shields.io/badge/MCP-Streamable%20HTTP%20(1.30.0)-0F766E)
+![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 
-Projekt łączy metawyszukiwarkę **SearXNG**, polski interfejs przeglądarkowy i serwer **MCP**. Możesz szukać samodzielnie albo udostępnić wyszukiwanie swojej aplikacji i agentom. Gdy SearXNG zwróci puste wyniki lub błąd, serwer próbuje opcjonalnego źródła awaryjnego: Perplexity Search API.
+> **Wielki internet. Twoje pytania. Jeden punkt dostępu dla Ciebie i Twoich agentów AI.**
 
-## Co tu znajdziesz
+**`szukaj`** (`https://github.com/mafio69/szukaj`, w sieci domowej dostępny jako **`http://szukaj.dom/`**) łączy prywatną metawyszukiwarkę **SearXNG**, dopracowany polski interfejs przeglądarkowy w React oraz serwer **Model Context Protocol (MCP)**. Możesz korzystać z wyszukiwarki bezpośrednio w przeglądarce albo podpiąć narzędzie `web_search` do swoich agentów i aplikacji AI. Gdy SearXNG zwróci puste wyniki lub błąd, serwer automatycznie próbuje opcjonalnego źródła awaryjnego — **Perplexity Search API**.
 
-- **Wyszukiwarkę dla ludzi** — interfejs React z tytułami, adresami i opisami wyników, wyborem 5 lub 10 wyników oraz skrótem `Ctrl/Cmd + K`.
-- **Historię pod Twoją kontrolą** — do 30 ostatnich zapytań w pamięci przeglądarki, usuwanie pojedynczych wpisów lub całości i opcję niezapisywania nowych zapytań.
-- **Wyszukiwanie dla AI** — narzędzie MCP `web_search` przez Streamable HTTP, do podłączenia do własnego klienta lub backendu aplikacji.
-- **Wspólny mechanizm** — interfejs i MCP korzystają z tej samej logiki: najpierw SearXNG, potem ewentualnie Perplexity.
-- **Własne środowisko** — dwie usługi Docker Compose; frontend buduje się razem z obrazem aplikacji. Wariant kontenerowy nie wymaga lokalnego Node.js ani Pythona.
+---
 
-Perplexity nie jest wymagane do wyszukiwania przez SearXNG. Bez klucza API źródło awaryjne pozostaje niedostępne. Opcja niezapisywania historii dotyczy przeglądarki — zapytania nadal trafiają do serwera i dostawców wyszukiwania.
+## Najważniejsze możliwości
 
-## Jak to działa
+| Obszar | Co otrzymujesz |
+|---|---|
+| **Wyszukiwarka dla ludzi (`szukaj.dom`)** | Przejrzysty polski interfejs React 19 z tytułami, domenami i fragmentami wyników, wyborem `5` lub `10` wyników, obsługą klawiatury i skrótem `Ctrl/Cmd + K`. |
+| **Historia pod Twoją kontrolą** | Do 30 ostatnich zapytań wyłącznie w `localStorage` przeglądarki, usuwanie pojedynczych wpisów lub całości oraz tryb *Bez zapisywania historii*. |
+| **Wyszukiwanie dla AI (MCP)** | Narzędzie `web_search` przez **MCP Streamable HTTP** (`/mcp`) z negocjacją protokołu (`2024-11-05` – `2025-11-25`) i opcjonalną autoryzacją `Bearer`. |
+| **Wspólny silnik i kontrolowany fallback** | UI i MCP korzystają z tej samej asynchronicznej logiki (`httpx.AsyncClient` z pulą połączeń): najpierw **SearXNG**, a przy pustym wyniku lub błędzie opcjonalnie **Perplexity** z atomowym dziennym limitem. |
+| **Gotowy stack Docker Compose** | Dwie usługi (`searxng` ze sprawdzaniem zdrowia `/healthz` oraz nieuprzywilejowany `mcp-search` `UID 10001:10001`) z rotacją logów; obraz sam buduje frontend i nie wymaga lokalnego Node.js ani Pythona. |
+
+> [!NOTE]
+> Perplexity nie jest wymagane do działania wyszukiwarki przez SearXNG — bez klucza API źródło awaryjne pozostaje wyłączone. Tryb *Bez zapisywania historii* dotyczy wyłącznie pamięci przeglądarki; samo zapytanie wyszukiwania trafia do backendu i dostawców.
+
+---
+
+## Architektura i przepływ zapytania
 
 ```text
-Przeglądarka → /api/search ─┐
-                          ├→ wspólna logika → SearXNG → wyniki
-Klient AI   → /mcp ───────┘                       │
-                                        pusto lub błąd
-                                                 ↓
-                                      Perplexity (opcjonalnie)
+Przeglądarka (szukaj.dom) ──► POST /api/search ──┐
+                                                 ├──► web_search (async) ──► SearXNG (JSON, timeout 10 s)
+Klient AI / Backend       ──► POST /mcp ─────────┘                                │
+                              (Streamable HTTP)                         pusto lub błąd HTTP
+                                                                                  ▼
+                                                                   Perplexity Search API (opcjonalnie,
+                                                                   dzienny limit w pamięci, timeout 20 s)
 ```
 
-Serwer zwraca tytuły, URL i fragmenty do 400 znaków. Nie pobiera pełnej treści znalezionych stron i nie generuje odpowiedzi modelem językowym.
+Serwer zwraca ustrukturyzowane wyniki (`title`, `url`, `snippet` do 400 znaków) oraz jednoznaczny status (`ok`, `empty`, `error`). Nie pobiera pełnej treści stron docelowych i nie generuje odpowiedzi modelem językowym.
 
-## Uruchomienie przez Docker Compose
+---
 
-Potrzebujesz Dockera z Compose, dostępu do Internetu dla wyszukiwania i pobrania obrazów oraz wolnego portu `8890`. Polecenia wykonuj w katalogu sklonowanego repozytorium.
+## Szybki start (Docker Compose)
 
-### 1. Przygotuj konfigurację
+Potrzebujesz Dockera z Compose, dostępu do Internetu oraz wolnego portu na hoście (domyślnie `8890`). Polecenia wykonuj w katalogu głównym sklonowanego repozytorium `szukaj`.
 
-Utwórz lokalny plik `.env` na podstawie `.env.example` i ustaw nowy `SEARXNG_SECRET`. Pozostałe puste pola używają domyślnych wartości lub wyłączają opcjonalną integrację. Compose wymaga pliku i klucza. Nie dodawaj rzeczywistego `.env` do Gita.
+### 1. Przygotuj konfigurację (`.env`)
+
+Skopiuj szablon `.env.example` do `.env` i wygeneruj lokalnie własny klucz `SEARXNG_SECRET` (np. `openssl rand -hex 32`). Pozostałe puste zmienne przyjmą wartości domyślne. **Nigdy nie dodawaj prawdziwego `.env` do Gita.**
 
 | Zmienna | Domyślne zachowanie / zastosowanie |
 |---|---|
 | `SEARXNG_SECRET` | Wymagany nowy losowy klucz SearXNG, ustawiany wyłącznie lokalnie; Compose nie wystartuje bez wartości |
-| `MCP_AUTH_TOKEN` | Opcjonalny sekret Bearer dla wszystkich żądań `/mcp`; konfiguruj tylko lokalnie, nigdy w kodzie UI |
+| `MCP_AUTH_TOKEN` | Opcjonalny sekret Bearer dla wszystkich żądań `/mcp` (schemat `Bearer` jest nieczuły na wielkość liter, token porównywany stałoczasowo); konfiguruj tylko lokalnie |
 | `PPLX_API_KEY` | Opcjonalny klucz Perplexity; brak uniemożliwia użycie źródła awaryjnego |
-| `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit prób Perplexity rezerwowanych w procesie |
-| `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania |
-| `SEARCH_ALLOWED_HOSTS` | Zaufane nazwy hostów oddzielone przecinkami; domyślnie `127.0.0.1,localhost,mcp-search`. Przy własnym adresie LAN/domenie dodaj go jawnie, zachowując potrzebne dotychczasowe nazwy. Nie używaj `*`. |
+| `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit prób Perplexity rezerwowanych atomowo w procesie |
+| `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania przekazywany do SearXNG |
+| `SEARCH_ALLOWED_HOSTS` | Zaufane nazwy hostów oddzielone przecinkami; domyślnie `127.0.0.1,localhost,mcp-search`. Dla domeny lokalnej dopisz np. `szukaj.dom`. Nie używaj `*`. |
 | `SEARCH_PORT` | Domyślnie `8890`; port publikowany na hoście |
 | `SEARCH_BIND_ADDRESS` | Domyślnie `127.0.0.1`; adres nasłuchiwania na hoście |
+| `SEARXNG_URL` | Domyślnie `http://searxng:8080`; adres usługi SearXNG wewnątrz sieci Docker |
+| `MCP_HOST` | Domyślnie `0.0.0.0`; adres nasłuchiwania serwera wewnątrz kontenera |
+| `MCP_PORT` | Domyślnie `8000`; port nasłuchiwania serwera wewnątrz kontenera |
 
-Compose ustawia `SEARXNG_URL` na `http://searxng:8080`. Zostaw domyślne `MCP_HOST` (`0.0.0.0`) i `MCP_PORT` (`8000`) wewnątrz kontenera, aby zachować zgodność z mapowaniem portów.
+SearXNG montuje w trybie tylko do odczytu publiczny szablon `searxng-settings.example.yml` (z pustym `server.secret_key` oraz skonfigurowanymi timeoutami `3.0` / `8.0` s); właściwy klucz pochodzi wyłącznie ze zmiennej `SEARXNG_SECRET`.
 
-SearXNG montuje publiczny `searxng-settings.example.yml` z pustym `server.secret_key`; rzeczywista wartość pochodzi wyłącznie ze zmiennej `SEARXNG_SECRET` ustawionej lokalnie w `.env` lub środowisku operatora. Wygeneruj nową losową wartość — starego klucza z historii nie używaj ponownie. Nie wklejaj go do czatu ani logów. Dotychczasowy lokalny `searxng-settings.yml` pozostaje na dysku, ale nie jest już śledzony ani montowany przez Compose. Ta zmiana nie usuwa starego klucza z historii Git; rotację i uruchomienie nowego obrazu potwierdza operator.
+### 2. Utwórz sieć i uruchom kontenery
 
-### 2. Przygotuj sieć i uruchom usługi
-
-Compose korzysta z istniejącej sieci Docker `ai`. Jeśli jeszcze jej nie masz, utwórz ją jednorazowo:
+Usługi komunikują się w zewnętrznej sieci Docker `ai`. Utwórz ją jednorazowo:
 
 ```bash
 docker network create ai
 ```
 
-Następnie zbuduj i uruchom projekt:
+Zbuduj i uruchom stack:
 
 ```bash
 docker compose up -d --build
 docker compose ps
 ```
 
-Otwórz **http://127.0.0.1:8890/**. Pierwszy start trwa dłużej, ponieważ Docker pobiera zależności i buduje frontend. Po zmianie portu użyj wybranej wartości zamiast `8890`.
+Otwórz **`http://127.0.0.1:8890/`** (lub **`http://szukaj.dom/`**, jeśli skonfigurowałeś lokalny DNS / reverse proxy i dodałeś `szukaj.dom` do `SEARCH_ALLOWED_HOSTS`). Kontener `mcp-search` startuje po przejściu `healthcheck` (`/healthz`) przez `searxng`.
 
-Domyślna konfiguracja udostępnia aplikację tylko lokalnie na hoście. Aplikacja nie ma własnego logowania; udostępnienie jej poza hostem wymaga przygotowania kontroli dostępu. Kontenery w sieci `ai` również mają dostęp do usługi.
+---
 
-## Podłącz agenta AI
+## Podłączenie agenta AI (MCP Streamable HTTP)
 
-W kliencie obsługującym **MCP Streamable HTTP** dodaj adres właściwy dla jego lokalizacji:
+W kliencie obsługującym **MCP Streamable HTTP** wskaż adres odpowiedni dla miejsca, w którym działa klient:
 
-| Klient | Adres |
+| Lokalizacja klienta MCP | Endpoint MCP |
 |---|---|
 | Na tym samym hoście co Docker | `http://127.0.0.1:8890/mcp` |
-| W kontenerze podłączonym do sieci `ai` | `http://mcp-search:8000/mcp` |
+| W kontenerze podłączonym do sieci Docker `ai` | `http://mcp-search:8000/mcp` |
 
-Jeżeli operator ustawił `MCP_AUTH_TOKEN`, klient musi wysyłać `Authorization: Bearer <wartość z bezpiecznej konfiguracji>` w każdym żądaniu MCP, także podczas inicjalizacji, odczytu strumienia i zamykania sesji. Bez konfiguracji ochrona jest wyłączona. Dotyczy tylko MCP; udostępnienie całego UI/API poza zaufaną siecią wymaga osobnej kontroli dostępu.
+Jeżeli ustawiono `MCP_AUTH_TOKEN`, klient musi dołączać nagłówek `Authorization: Bearer <token>` do każdego żądania `/mcp` (inicjalizacja, odczyt strumienia, wywołania narzędzi, zamknięcie sesji).
 
-Po inicjalizacji sesji klient znajdzie narzędzie:
+### Sygnatura i odpowiedź narzędzia `web_search`
 
 ```text
 web_search(query: string, max_results: integer = 5)
 ```
 
-Przykładowe argumenty:
+Przykładowe wywołanie:
 
 ```json
 {"query": "jak działa metawyszukiwarka", "max_results": 3}
 ```
 
-Narzędzie zwraca tekst JSON z polami `status`, `source`, `results`, `errors`. Status to `ok`, `empty` lub `error`; przy braku wyników i awarii źródło jest `null`, a rozróżnienie wynika ze statusu. Limit wyników jest ograniczany do zakresu 1–10.
+Narzędzie przyjmuje `query` o długości `1–1000` znaków Unicode (`max_results` w zakresie `1–10`) i zwraca tekst JSON:
+- `status`: `"ok"` | `"empty"` | `"error"`
+- `source`: `"searxng"` | `"perplexity-fast"` | `null`
+- `results`: lista obiektów `{"title", "url", "snippet"}`
+- `errors`: lista kontrolowanych kodów błędów dostawców (bez ujawniania surowych wyjątków ani sekretów)
 
-Pełny kontrakt, obsługę błędów i instrukcję dla agentów znajdziesz w **[docs/MCP-USAGE.md](docs/MCP-USAGE.md)**. Endpoint `/mcp` wymaga protokołu MCP, więc nie przyjmuje samego JSON-a z zapytaniem jak zwykłe API REST.
+Szczegółowy przewodnik wdrożeniowy dla agentów i aplikacji znajdziesz w **[docs/instrukcja-integracji-mcp-search.md](docs/instrukcja-integracji-mcp-search.md)** oraz **[docs/MCP-USAGE.md](docs/MCP-USAGE.md)**.
 
-## API dla własnej aplikacji
+---
 
-Interfejs przeglądarkowy używa `POST /api/search`. Poniższe żądanie wykona rzeczywiste wyszukiwanie i może uruchomić opcjonalne płatne źródło awaryjne:
+## Endpoint HTTP dla przeglądarki (`POST /api/search`)
+
+Interfejs webowy korzysta z tego samego silnika przez endpoint `POST /api/search`:
 
 ```bash
 curl http://127.0.0.1:8890/api/search \
@@ -106,96 +128,93 @@ curl http://127.0.0.1:8890/api/search \
   -d '{"query":"metawyszukiwarka SearXNG","max_results":5}'
 ```
 
-API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwraca `status`, `source` oraz `results` z polami `title`, `url`, `snippet`. `status: empty`, pusta lista i `source: null` oznaczają poprawne wyszukanie bez wyników. Awaria daje HTTP 502 bez szczegółów dostawców. Narzędzie MCP dopuszcza do 1000 znaków Unicode i odrzuca puste zapytania przed HTTP.
+- Przyjmuje obiekt JSON (do `4096` bajtów) z niepustym `query` (`1–500` znaków) i `max_results` (`1–10`).
+- Zwraca `status` (`ok` / `empty`), `source` oraz `results`.
+- Odrzuca żądania z obcych hostów (`TrustedHostMiddleware`) oraz żądania cross-site (`Origin` / `Sec-Fetch-Site`).
+- W razie awarii dostawców zwraca kontrolowany kod `HTTP 502` bez szczegółów wewnętrznych.
 
-## Gdy coś nie działa
+---
 
-| Objaw | Co sprawdzić |
-|---|---|
-| Compose zgłasza brak sieci `ai` | Utwórz sieć przed uruchomieniem usług |
-| Compose zgłasza brak `.env` | Utwórz lokalny plik; bez Perplexity może być pusty |
-| Port `8890` jest zajęty | Ustaw inny `SEARCH_PORT` w lokalnej konfiguracji i odtwórz usługę przez Compose |
-| Kontener klienta nie łączy się z MCP | Podłącz go do sieci `ai` i użyj `mcp-search:8000`, zamiast `127.0.0.1:8890` |
-| Brak wyników | Sprawdź logi SearXNG, dostęp do Internetu i włączenie formatu JSON; bez klucza Perplexity nie pomoże awaryjnie |
-| Strona zgłasza brak zbudowanego frontendu | Zbuduj obraz przez Compose; samo uruchomienie `mcp/server.py` udostępnia wyłącznie MCP |
+## Smoke test wdrożenia
 
-```bash
-docker compose logs --tail=50 searxng mcp-search
-```
-
-Limit Perplexity jest przechowywany w pamięci procesu i resetuje się po restarcie lub zmianie daty. Rezerwacja prób jest atomowa w jednym procesie; błędy i anulowanie nie zwracają rezerwacji. Nie jest to trwały ani współdzielony między procesami budżet.
-
-## Smoke test po uruchomieniu
-
-Po starcie kontenerów wykonaj z katalogu repozytorium:
+Po uruchomieniu kontenerów możesz zweryfikować działanie całego stacku (UI, zasobów statycznych, nagłówków, walidacji API oraz inicjalizacji sesji MCP i `tools/list`) bez zużywania zapytań wyszukiwarek:
 
 ```bash
 python3 scripts/smoke_test.py
+# lub dla domeny lokalnej / innego portu:
+python3 scripts/smoke_test.py --url http://szukaj.dom
 ```
 
-Skrypt wymaga tylko standardowej biblioteki Pythona. Sprawdza stronę, pliki JS/CSS, favicon, odrzucanie niepoprawnych i obcych żądań API oraz inicjalizację MCP i obecność `web_search`. Zwraca kod `0` po sukcesie, `1` po błędzie. Domyślnie nie wywołuje dostawców wyszukiwania, więc nie potwierdza dostępności SearXNG ani Perplexity.
-
-Inny port/adres: `python3 scripts/smoke_test.py --url http://127.0.0.1:8891`.
-Pełną próbę wyszukiwania włączasz jawnie:
+Pełną próbę wyszukiwania na żywo włączasz jawnie flagą `--query` (może użyć płatnego fallbacku Perplexity, jeśli SearXNG nie zwróci wyników):
 
 ```bash
-python3 scripts/smoke_test.py --query "SearXNG documentation"
+python3 scripts/smoke_test.py --url http://szukaj.dom --query "SearXNG documentation"
 ```
 
-Ta opcja wymaga niepustych wyników i może użyć płatnego Perplexity, jeśli SearXNG zawiedzie. Nie przekazuj sekretów w zapytaniu.
+---
+
+## Rozwiązywanie problemów
+
+| Objaw | Co sprawdzić |
+|---|---|
+| Compose zgłasza brak sieci `ai` | Wykonaj `docker network create ai` przed startem usług |
+| Compose zgłasza brak `.env` lub `SEARXNG_SECRET` | Utwórz lokalny `.env` na bazie `.env.example` i wpisz niepusty `SEARXNG_SECRET` |
+| `400 Invalid host header` pod własną domeną | Dopisz domenę (np. `szukaj.dom`) po przecinku do `SEARCH_ALLOWED_HOSTS` w `.env` i zrestartuj `mcp-search` |
+| Kontener klienta nie łączy się z MCP | Podłącz kontener klienta do sieci `ai` i użyj `http://mcp-search:8000/mcp` zamiast `127.0.0.1` |
+| Brak wyników wyszukiwania | Sprawdź logi (`docker compose logs --tail=50 searxng mcp-search`) oraz dostęp kontenera `searxng` do Internetu |
+
+---
 
 ## Dla rozwijających projekt
 
-Backend obrazu używa Python 3.12, FastMCP v1, HTTPX i Starlette. Frontend to React 19 i Vite 7; lokalnie wymaga Node.js co najmniej 22.12. Docker buduje go na Node.js 24.
+- **Backend:** Python 3.12, FastMCP v1 (`mcp==1.30.0`), HTTPX (`AsyncClient`), Starlette, Uvicorn.
+- **Frontend:** React 19, Vite 7, Vitest + Testing Library (lokalnie Node.js `>=22.12`, w Dockerze budowany na Node.js 24).
 
-| Plik / katalog | Rola |
+| Ścieżka | Odpowiedzialność |
 |---|---|
-| `mcp/server.py` | Narzędzie MCP i wybór źródła wyników |
-| `mcp/web_app.py` | API przeglądarkowe, pliki frontendu i wspólna aplikacja HTTP |
-| `web/src/` | Interfejs, historia lokalna i klient API |
-| `tests/test_web_app.py` | Testy backendu i mechanizmu awaryjnego z atrapami dostawców |
-| `web/src/App.test.jsx` | Testy interfejsu |
-| `docker-compose.yml` | Dwie usługi i ich połączenie |
+| `mcp/server.py` | Narzędzie MCP `web_search`, współdzielony `httpx.AsyncClient`, dostawcy i atomowy limit Perplexity |
+| `mcp/web_app.py` | Aplikacja ASGI (Starlette), `POST /api/search`, serwowanie UI, nagłówki bezpieczeństwa i `lifespan` |
+| `mcp/access.py` | Middleware autoryzacji `Bearer` dla `/mcp` |
+| `web/src/` | Interfejs React (`szukaj.dom`), historia w `localStorage` i klient API |
+| `scripts/check_project.py` | Obowiązkowa bramka jakości przed każdym commitem |
+| `scripts/check_tracked_files.py` | Skaner sekretów i zabronionych plików w drzewie roboczym oraz indeksie Git |
+| `scripts/smoke_test.py` | Bezależnościowy test dymny wdrożenia |
+| `tests/` i `web/src/App.test.jsx` | Testy jednostkowe i integracyjne backendu (53) oraz frontendu (18) |
 
-Po zainstalowaniu zależności backendu z `mcp/requirements.txt` oraz frontendu z `web/package.json` dodaj lokalne narzędzie deweloperskie Ruff (nie jest instalowane w obrazie aplikacji):
+### Kontrola jakości przed commitem
+
+Jednorazowa lokalna instalacja przypiętego lintera Ruff do ignorowanego katalogu `.local/`:
 
 ```bash
 mkdir -p .local/tmp/pip
 TMPDIR="$PWD/.local/tmp/pip" python3 -m pip install --only-binary=:all: --no-deps --target .local/tools/ruff --cache-dir .local/cache/pip -r requirements-dev.txt
 ```
 
-Przed każdym commitem uruchom pełną kontrolę:
+Przed każdym commitem uruchom pełną bramkę jakości:
 
 ```bash
 python3 scripts/check_project.py
 ```
 
-Runner sprawdza kolejno Ruff, testy backendu, testy frontendu, build i zmiany Git (robocze oraz staged). Błąd lub brak narzędzia blokuje commit. Raporty pozostają w ignorowanym `.local/logs/checks/`; nie publikuj ich bez sprawdzenia. Nie wczytuje `.env` ani nie wykonuje rzeczywistych wyszukiwań. Agenci mają stałą zgodę na tę kontrolę zgodnie z AGENTS.md.
+Skrypt wykonuje kolejno:
+1. `ruff` — lint kodu Pythona (`mcp`, `scripts`, `tests`),
+2. `tracked-files` — skanowanie plików śledzonych i indeksu Git pod kątem sekretów i niepustych szablonów `.env*`,
+3. `backend` — 53 testy jednostkowe i integracyjne Pythona (offline),
+4. `frontend` — 18 testów komponentów React (Vitest),
+5. `build` — produkcyjny build frontendu (Vite),
+6. `diff` oraz `staged-diff` — kontrola formatowania zmian Git (`git diff --check`).
 
-Poszczególne kontrole można uruchomić osobno diagnostycznie:
+---
 
-```bash
-PYTHONPATH=.local/tools/ruff python3 -m ruff check --config ruff.toml mcp scripts tests
-python3 -m unittest discover -s tests -v
-npm --prefix web test
-npm --prefix web run build
-git diff --check
-```
+## Dokumentacja projektu
 
-Ruff sprawdza błędy Pythona i podstawowy styl; nie zastępuje testów, skanowania sekretów ani audytu bezpieczeństwa. Domyślna kontrola nie poprawia plików automatycznie. Instalacja narzędzia niesie zwykłe ryzyko zależności zewnętrznej; przypięta wersja i oddzielenie od aplikacji ograniczają zakres. `--fix`, formatowanie i szczególnie `--unsafe-fixes` mogą zmienić kod — zasady ich używania opisuje AGENTS.md.
-
-Do pracy nad frontendem służy `npm --prefix web run dev`. Serwer Vite przekazuje `/api` do backendu pod `http://127.0.0.1:8890`; backend musi być uruchomiony osobno.
-
-## Dokumentacja
-
-- [Instrukcja integracji MCP Search dla agenta](docs/instrukcja-integracji-mcp-search.md) — start wdrożenia w aplikacji, aktualne adresy HTTP, sesja MCP i testy odbioru.
-- [MCP dla AI i integratorów](docs/MCP-USAGE.md) — kontrakt narzędzia, protokół, błędy i plan testu integracyjnego.
-- [Instrukcja integracji](docs/INSTRUKCJA.md) — codzienne operacje i przykłady konfiguracji klientów MCP.
-- [Stan projektu](STATUS.md) i [historia zmian](CHANGELOG.md).
-- [Zasady pracy agentów](AGENTS.md), [Git flow](GIT-FLOW.md) i [przekazanie sesji](HANDOFF.md).
+- **[Instrukcja integracji MCP Search dla agenta](docs/instrukcja-integracji-mcp-search.md)** — punkt startowy wdrożenia w aplikacji klienckiej, adresy HTTP, sesja MCP i testy odbioru.
+- **[MCP dla AI i integratorów](docs/MCP-USAGE.md)** — pełny kontrakt narzędzia `web_search`, kody błędów i negocjacja protokołu.
+- **[Zgodność kontraktu MCP](docs/contract/MCP-COMPATIBILITY.md)** — raport weryfikacji transportu i wspólnych fixtures JSON.
+- **[Codzienna instrukcja operacyjna](docs/INSTRUKCJA.md)** — komendy Docker Compose i konfiguracja klientów MCP.
+- **[Mapa techniczna repozytorium](REPO.md)**, **[Stan projektu](STATUS.md)** i **[Historia zmian](CHANGELOG.md)**.
+- **[Zasady pracy agentów AI](AGENTS.md)**, **[Git Flow](GIT-FLOW.md)** i **[Przekazanie sesji](HANDOFF.md)**.
 
 ## Wersja i status wydania
 
 Ostatnie oznaczone wydanie to `0.1.0` (bieżące zmiany rozwojowe znajdują się w sekcji `[Unreleased]` w [CHANGELOG.md](CHANGELOG.md)). Oznaczenie stabilnego wydania `1.0.0` wymaga pozytywnego potwierdzenia testu integracji MCP przez aplikację kliencką WirralAI oraz zamknięcia kontroli wdrożeniowych opisanych w [STATUS.md](STATUS.md).
-
-Opis odpowiada kodowi w repozytorium. Nie stanowi potwierdzenia działania konkretnego wdrożenia ani integracji z wybranym klientem MCP.
