@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App.jsx';
+import ErrorBoundary from './ErrorBoundary.jsx';
+import { formatSearchError } from './api.js';
 import { HISTORY_KEY, PRIVATE_KEY, readHistory, remember } from './storage.js';
 
 const response = { source: 'searxng', results: [{ title: 'Wynik testowy', url: 'https://example.org/test', snippet: 'Opis wyniku' }] };
@@ -108,11 +110,29 @@ describe('search application', () => {
     expect(screen.getByText('Ciekawość to', { exact: false })).toBeTruthy();
   });
 
-  it('handles network errors without leaving stale results', async () => {
-    fetch.mockRejectedValueOnce(new Error('Brak połączenia'));
+  it('handles network errors without leaving stale results or leaking internal details in prod', async () => {
+    fetch.mockRejectedValueOnce(new Error('TypeError: internal socket ECONNREFUSED 10.0.0.5'));
     render(<App />); await submit();
-    await screen.findByRole('alert');
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Błąd. Przepraszamy');
+    expect(alert.textContent).toContain('Wystąpił problem techniczny. Spróbuj ponownie za moment.');
+    expect(alert.textContent).not.toContain('ECONNREFUSED');
     expect(screen.queryByRole('link', { name: /Wynik testowy/ })).toBeNull();
+  });
+
+  it('shows diagnostic error details in dev mode and hides them in prod mode', () => {
+    const raw = new Error('debug stack detail');
+    expect(formatSearchError(raw, 'prod')).not.toContain('debug stack detail');
+    expect(formatSearchError(raw, 'dev')).toContain('debug stack detail');
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    function BrokenComponent() { throw new Error('render crash detail'); }
+    render(<ErrorBoundary appEnv="prod"><BrokenComponent /></ErrorBoundary>);
+    expect(screen.getByRole('alert').textContent).toContain('Błąd. Przepraszamy');
+    expect(screen.getByRole('alert').textContent).not.toContain('render crash detail');
+    cleanup();
+    render(<ErrorBoundary appEnv="dev"><BrokenComponent /></ErrorBoundary>);
+    expect(screen.getByRole('alert').textContent).toContain('render crash detail');
+    spy.mockRestore();
   });
 });
 

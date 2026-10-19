@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Icon from './Icon.jsx';
-import { search, safeUrl } from './api.js';
+import { formatSearchError, search, safeUrl } from './api.js';
 import { HISTORY_KEY, PRIVATE_KEY, readHistory, readPrivate, remember, store } from './storage.js';
 
 const ideas = [
@@ -104,7 +104,7 @@ export default function App() {
       if (result.status === 'error' || (result.source === null && result.status !== 'empty')) setError('Nie udało się pobrać wyników z dostępnych wyszukiwarek. Spróbuj ponownie za moment.');
     } catch (failure) {
       if (id !== requestId.current) return;
-      setError(failure.name === 'AbortError' ? 'Wyszukiwanie trwało zbyt długo. Spróbuj ponownie.' : failure.message);
+      setError(formatSearchError(failure));
     } finally {
       clearTimeout(timeout);
       if (id === requestId.current) setLoading(false);
@@ -130,7 +130,7 @@ export default function App() {
         {history.length === 0 ? <div className="history-empty"><Icon name="clock" size={28} /><p>Tu zaczyna się Twoja<br />historia odkryć.</p><span>Ostatnie zapytania będą<br />zawsze pod ręką.</span></div> : <>
           <p className="history-period">Ostatnie wyszukiwania</p>
           {history.map(item => <div className={`history-row ${searched === item.query ? 'active' : ''}`} key={item.query}>
-            <button className="history-query" onClick={() => runSearch(item.query)} title={item.query}><Icon name="clock" size={15} /><span>{item.query}</span></button>
+            <button className="history-query" onClick={() => { void runSearch(item.query); }} title={item.query}><Icon name="clock" size={15} /><span>{item.query}</span></button>
             <button className="icon-button remove-history" aria-label={`Usuń z historii: ${item.query}`} onClick={() => saveHistory(history.filter(entry => entry.query !== item.query))}><Icon name="close" size={14} /></button>
           </div>)}
         </>}
@@ -147,7 +147,7 @@ export default function App() {
       <main id="main" className={searched ? 'main-content has-results' : 'main-content'}>
         {!searched && <section className="hero"><div className="eyebrow"><span className="eyebrow-line" /> MNIEJ SZUMU. WIĘCEJ ODKRYĆ.</div><h1>Ciekawość to<br />dobry <span>początek<svg viewBox="0 0 390 20" aria-hidden="true"><path d="M4 14 Q160 -1 385 10" /></svg></span>.</h1><p>Wielki internet. Twoje pytania.<br className="mobile-break" /> Znajdź to, czego szukasz.</p></section>}
         <section className="search-section" aria-label="Wyszukiwarka">
-          <form className={`search-form ${loading ? 'is-loading' : ''}`} onSubmit={event => { event.preventDefault(); runSearch(); }}>
+          <form className={`search-form ${loading ? 'is-loading' : ''}`} onSubmit={event => { event.preventDefault(); void runSearch(); }}>
             <Icon name="search" size={24} /><label className="sr-only" htmlFor="search-input">Czego szukasz?</label>
             <input ref={input} id="search-input" value={query} onChange={event => setQuery(event.target.value)} placeholder="Co chcesz dziś odkryć?" maxLength={500} autoComplete="off" />
             {query && <button type="button" className="icon-button" aria-label="Wyczyść zapytanie" onClick={() => { setQuery(''); input.current?.focus(); }}><Icon name="close" size={17} /></button>}
@@ -156,10 +156,10 @@ export default function App() {
           <div className="search-options"><label className="private-toggle"><input type="checkbox" checked={privateMode} onChange={event => { setPrivate(event.target.checked); if (!store(PRIVATE_KEY, event.target.checked)) setStorageNotice('Ustawienie historii obowiązuje tylko w tej karcie.'); }} /><span className="toggle-track" /><Icon name="shield" size={14} /><span>Bez zapisywania historii</span></label><label className="results-select">Wyników <select aria-label="Liczba wyników" value={maxResults} onChange={event => setMaxResults(Number(event.target.value))}><option value={5}>5</option><option value={10}>10</option></select></label></div>
         </section>
         {storageNotice && <p className="storage-notice" role="status">{storageNotice}</p>}
-        {!searched && <><section className="inspiration" aria-label="Inspiracje"><div className="section-label">NIE WIESZ, OD CZEGO ZACZĄĆ?</div><div className="idea-grid">{ideas.map(idea => <button className="idea-card" key={idea.label} onClick={() => runSearch(idea.query)}><span className="idea-icon"><Icon name={idea.icon} size={19} /></span><span>{idea.label}</span><Icon name="arrow" size={16} /></button>)}</div></section><section className="feature-strip" aria-label="Jak działa wyszukiwarka"><div><Icon name="globe" size={21} /><span><strong>Szersza perspektywa</strong><small>Wyniki z wielu wyszukiwarek</small></span></div><span className="feature-divider" /><div><Icon name="shield" size={21} /><span><strong>Ty decydujesz</strong><small>Historia pod Twoją kontrolą</small></span></div></section></>}
+        {!searched && <><section className="inspiration" aria-label="Inspiracje"><div className="section-label">NIE WIESZ, OD CZEGO ZACZĄĆ?</div><div className="idea-grid">{ideas.map(idea => <button className="idea-card" key={idea.label} onClick={() => { void runSearch(idea.query); }}><span className="idea-icon"><Icon name={idea.icon} size={19} /></span><span>{idea.label}</span><Icon name="arrow" size={16} /></button>)}</div></section><section className="feature-strip" aria-label="Jak działa wyszukiwarka"><div><Icon name="globe" size={21} /><span><strong>Szersza perspektywa</strong><small>Wyniki z wielu wyszukiwarek</small></span></div><span className="feature-divider" /><div><Icon name="shield" size={21} /><span><strong>Ty decydujesz</strong><small>Historia pod Twoją kontrolą</small></span></div></section></>}
         <section className="search-feedback" aria-live="polite" aria-atomic="true">
           {loading && <div className="loading-state" role="status"><span className="spinner" /><div><strong>Szukamy dobrych odpowiedzi…</strong><p>Przeszukujemy sieć dla Ciebie.</p></div></div>}
-          {!loading && error && <div className="message-card error-message" role="alert"><Icon name="globe" size={30} /><h2>Nie udało się wyszukać</h2><p>{error}</p><button className="secondary-button" onClick={() => runSearch(searched)}>Spróbuj ponownie <Icon name="arrow" size={16} /></button></div>}
+          {!loading && error && <div className="message-card error-message" role="alert"><Icon name="globe" size={30} /><h2>Błąd. Przepraszamy</h2><p>{error}</p><button className="secondary-button" onClick={() => { void runSearch(searched); }}>Spróbuj ponownie <Icon name="arrow" size={16} /></button></div>}
           {!loading && !error && data && <div className="results-summary"><span>{results.length ? `${results.length} wyników` : 'Brak wyników'} dla <strong>„{searched}”</strong></span><span>{data.source === 'perplexity-fast' ? 'Perplexity · źródło awaryjne' : 'SearXNG'} <span className="summary-dot">·</span> {elapsed.toFixed(1)} s</span></div>}
           {!loading && !error && data && !results.length && <div className="message-card"><Icon name="search" size={32} /><h2>Spróbuj spojrzeć inaczej</h2><p>Nie znaleźliśmy wyników. Skróć zapytanie lub użyj innych słów.</p></div>}
         </section>

@@ -3,6 +3,8 @@ import hmac
 
 from starlette.responses import JSONResponse
 
+from app_logging import get_logger
+
 
 class McpAccessMiddleware:
     def __init__(self, app, auth_value=""):
@@ -22,6 +24,7 @@ class McpAccessMiddleware:
             values = [value for name, value in scope.get("headers", []) if name.lower() == b"authorization"]
             valid = len(values) == 1 and self._is_valid_header(values[0])
             if not valid:
+                get_logger().warning("Rejected unauthorized MCP request on %s", path)
                 response = JSONResponse(
                     {"error": "Unauthorized"}, status_code=401,
                     headers={"WWW-Authenticate": "Bearer", "Cache-Control": "no-store"},
