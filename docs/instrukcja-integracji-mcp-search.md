@@ -27,9 +27,11 @@ Wybierz adres zgodnie z tabelą i wpisz go w **jednym miejscu konfiguracji
 backendu**, np. jako `MCP_SEARCH_URL`. Nie rozrzucaj adresów po kontrolerach,
 UI, promptach i testach. Nie wysyłaj połączeń MCP z przeglądarki.
 
-Docelowa nazwa to `wyszukaj.dom`. **Nie używaj jej jeszcze.** Po uruchomieniu
-DNS/proxy zmienimy centralny URL na uzgodniony endpoint tej domeny, zachowując
-ścieżkę MCP i ponownie wykonując testy. Nie zakładaj gotowego DNS, portu ani TLS.
+Domowa nazwa to `szukaj.dom` (zamiast planowanego wcześniej `wyszukaj.dom`).
+Od 2026-10-19 działa dla strony WWW: Pi-hole kieruje `*.dom` na serwer, Traefik
+przekazuje `szukaj.dom` na `127.0.0.1:8000`, a `SEARCH_ALLOWED_HOSTS` zawiera tę
+nazwę. **Dla MCP nadal używaj adresów z tabeli** — endpoint domeny dla MCP
+zmienimy w jednym miejscu dopiero po ponownych testach. Nie zakładaj TLS.
 Obecny HTTP jest przeznaczony dla zaufanego hosta/sieci kontenerów.
 
 ## 2. Przygotuj integrację w kodzie aplikacji

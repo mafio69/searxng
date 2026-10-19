@@ -7,14 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Przygotowanie do wydania 1.0.0 (skaner sekretów, D1–D8, O1–O5, W3) — 2026-10-19
-- Dodano skaner śledzonych plików `scripts/check_tracked_files.py` do bramki `scripts/check_project.py` oraz usunięto `searxng.geany` ze śledzenia Git.
-- Ujednolicono dokumentację (`D1–D8`): poprawiono kontrakt i ścieżki w `docs/INSTRUKCJA.md`, listę zmiennych w `docs/MCP-USAGE.md`, sekcję statusu wydania w `README.md` oraz wersję `0.1.0` w `web/package.json` do chwili wydania `1.0.0`.
-- Zoptymalizowano klienta HTTP (`O1`): współdzielony `httpx.AsyncClient` na proces w `mcp/server.py` z zamykaniem w `lifespan` aplikacji (`mcp/web_app.py`).
-- Dodano timeouty wychodzące SearXNG (`3.0` / `8.0` s) i czas zawieszenia `SearxEngineTooManyRequests: 600` w `searxng-settings.example.yml` (`O2–O3`), a w `docker-compose.yml` dodano `healthcheck` (`/healthz`) z `condition: service_healthy` oraz rotację logów `json-file` (`O4–O5`).
-- Dodano nagłówki bezpieczeństwa `X-Content-Type-Options: nosniff` i `Referrer-Policy: no-referrer` dla odpowiedzi UI w `mcp/web_app.py` (`W3`).
-- Poprawki review PR #2: skanowanie zawartości indeksu Git i pełna walidacja pustych przypisań w szablonach środowiska w `scripts/check_tracked_files.py`, ochrona `Authorization` przed przekierowaniem (`add_unredirected_header`) w `scripts/smoke_test.py` oraz nieczuły na wielkość liter schemat `Bearer` w `mcp/access.py`.
-- Walidacja: Ruff PASS, tracked-files PASS, backend 53/53, frontend 18/18, build i diff-check roboczy/staged PASS.
+### Adres szukaj.dom — 2026-10-19 (fire, Claude Opus 5.5)
+- Strona „Szukaj” dostępna w sieci domowej pod `http://szukaj.dom/` bez portu. Poza repo: trasa Traefika `szukaj.dom` → `127.0.0.1:8000` w `~/app/observability/proxy/dynamic/uslugi.yml`; DNS bez zmian (Pi-hole `*.dom` → 192.168.1.172); lokalny `.env`: `SEARCH_ALLOWED_HOSTS` uzupełnione o `szukaj.dom`, `mcp-search` uruchomiony ponownie.
+- Nazwa `szukaj.dom` zastępuje planowane `wyszukaj.dom` (decyzja Mariusza). Instrukcja integracji i STATUS zaktualizowane; dla MCP nadal stałe adresy HTTP.
+- Sprawdzone: Pi-hole → 192.168.1.172, `szukaj.dom/` → 200 („Szukaj — Twoje okno na internet”), `POST /api/search` z Origin `http://szukaj.dom` → 200, źródło SearXNG, 5 wyników.
 
 ### Instrukcja integracji MCP Search dla agentów — 2026-10-18
 - Dodano docs/instrukcja-integracji-mcp-search.md: ustalone endpointy HTTP, integrację backendu i pętli narzędzia, trzy stany wyniku, sondę połączenia bez wyszukiwania oraz testy odbioru aplikacji.
