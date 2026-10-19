@@ -18,6 +18,21 @@ PORT = int(os.getenv("MCP_PORT") or "8000")
 mcp = FastMCP("search", host=HOST, port=PORT)
 _pplx = {"day": None, "count": 0}
 _pplx_lock = Lock()
+_http_client: httpx.AsyncClient | None = None
+
+
+def get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(follow_redirects=False)
+    return _http_client
+
+
+async def close_http_client() -> None:
+    global _http_client
+    client, _http_client = _http_client, None
+    if client is not None and not client.is_closed:
+        await client.aclose()
 
 
 class ProviderUnavailable(RuntimeError):
@@ -35,11 +50,11 @@ def _error_code(provider, error):
 
 
 async def _searxng(q: str, n: int) -> list[dict]:
-    async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
-        r = await client.get(
-            f"{SEARXNG_URL}/search",
-            params={"q": q, "format": "json", "language": SEARXNG_LANG},
-        )
+    r = await get_http_client().get(
+        f"{SEARXNG_URL}/search",
+        params={"q": q, "format": "json", "language": SEARXNG_LANG},
+        timeout=10,
+    )
     r.raise_for_status()
     out = r.json().get("results", [])[:n]
     return [
@@ -61,12 +76,12 @@ async def _perplexity(q: str, n: int) -> list[dict]:
         if _pplx["count"] >= PPLX_DAILY_LIMIT:
             raise ProviderUnavailable("perplexity_limit")
         _pplx["count"] += 1
-    async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
-        r = await client.post(
-            "https://api.perplexity.ai/search",
-            headers={"Authorization": f"Bearer {PPLX_KEY}"},
-            json={"query": q, "max_results": n, "search_type": "fast"},
-        )
+    r = await get_http_client().post(
+        "https://api.perplexity.ai/search",
+        headers={"Authorization": f"Bearer {PPLX_KEY}"},
+        json={"query": q, "max_results": n, "search_type": "fast"},
+        timeout=20,
+    )
     r.raise_for_status()
     return [
         {"title": x.get("title"), "url": x.get("url"),
