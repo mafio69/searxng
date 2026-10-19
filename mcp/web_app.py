@@ -76,12 +76,19 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
     async def index(request: Request):
         if not (assets / "index.html").is_file():
             return JSONResponse({"error": "Frontend not built. See README.md."}, status_code=503)
-        return FileResponse(assets / "index.html", headers={"Cache-Control": "no-cache"})
+        return FileResponse(assets / "index.html", headers={
+            "Cache-Control": "no-cache",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+        })
 
     async def favicon(request: Request):
         if not (assets / "favicon.svg").is_file():
             return JSONResponse({"error": "Not found"}, status_code=404)
-        return FileResponse(assets / "favicon.svg")
+        return FileResponse(assets / "favicon.svg", headers={
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+        })
 
     # Reuse FastMCP's application, including its existing session-manager lifespan.
     app = mcp.streamable_http_app()

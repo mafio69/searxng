@@ -116,7 +116,10 @@ class WebAppTests(unittest.TestCase):
             (static / "index.html").write_text("<title>Search UI</title>")
             (static / "assets" / "app.js").write_text("console.log('test')")
             with TestClient(create_app(self.service, static, allowed_hosts=["testserver"])) as client:
-                self.assertIn("Search UI", client.get("/").text)
+                index_response = client.get("/")
+                self.assertIn("Search UI", index_response.text)
+                self.assertEqual(index_response.headers.get("X-Content-Type-Options"), "nosniff")
+                self.assertEqual(index_response.headers.get("Referrer-Policy"), "no-referrer")
                 self.assertEqual(client.get("/assets/app.js").status_code, 200)
                 response = client.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
                     "protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "test", "version": "1"},
