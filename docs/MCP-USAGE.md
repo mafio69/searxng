@@ -162,9 +162,11 @@ fallbacku może zużywać płatne zapytania Perplexity.
 
 ## Konfiguracja i utrzymanie
 
-Nazwy zmiennych: `SEARXNG_URL`, `SEARXNG_LANG`, `PPLX_API_KEY`,
-`PPLX_DAILY_LIMIT`, `MCP_HOST`, `MCP_PORT`. Sekrety konfiguruje operator;
-agent integrujący nie potrzebuje odczytu `.env`.
+Nazwy zmiennych: `SEARXNG_SECRET`, `MCP_AUTH_TOKEN`, `PPLX_API_KEY`,
+`PPLX_DAILY_LIMIT`, `SEARXNG_LANG`, `SEARCH_ALLOWED_HOSTS`, `SEARCH_PORT`,
+`SEARCH_BIND_ADDRESS`, `SEARXNG_URL`, `MCP_HOST`, `MCP_PORT` (pełny opis
+i wartości domyślne w tabeli w [README.md](../README.md)). Sekrety konfiguruje
+operator; agent integrujący nie potrzebuje odczytu `.env`.
 
 Serwer używa Python 3.12 w obrazie oraz `mcp==1.30.0` i `httpx>=0.27`.
 Nie podnoś MCP do v2 w ramach integracji — implementacja używa FastMCP v1.
