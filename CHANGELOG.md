@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Przygotowanie do wydania 1.0.0 (skaner sekretów, D1–D8, O1–O5, W3) — 2026-10-19
+- Dodano skaner śledzonych plików `scripts/check_tracked_files.py` do bramki `scripts/check_project.py` oraz usunięto `searxng.geany` ze śledzenia Git.
+- Ujednolicono dokumentację (`D1–D8`): poprawiono kontrakt i ścieżki w `docs/INSTRUKCJA.md`, listę zmiennych w `docs/MCP-USAGE.md`, sekcję statusu wydania w `README.md` oraz wersję `0.1.0` w `web/package.json` do chwili wydania `1.0.0`.
+- Zoptymalizowano klienta HTTP (`O1`): współdzielony `httpx.AsyncClient` na proces w `mcp/server.py` z zamykaniem w `lifespan` aplikacji (`mcp/web_app.py`).
+- Dodano timeouty wychodzące SearXNG (`3.0` / `8.0` s) i czas zawieszenia `SearxEngineTooManyRequests: 600` w `searxng-settings.example.yml` (`O2–O3`), a w `docker-compose.yml` dodano `healthcheck` (`/healthz`) z `condition: service_healthy` oraz rotację logów `json-file` (`O4–O5`).
+- Dodano nagłówki bezpieczeństwa `X-Content-Type-Options: nosniff` i `Referrer-Policy: no-referrer` dla odpowiedzi UI w `mcp/web_app.py` (`W3`).
+- Walidacja: Ruff PASS, tracked-files PASS, backend 50/50, frontend 18/18, build i diff-check roboczy/staged PASS.
+
 ### Instrukcja integracji MCP Search dla agentów — 2026-10-18
 - Dodano docs/instrukcja-integracji-mcp-search.md: ustalone endpointy HTTP, integrację backendu i pętli narzędzia, trzy stany wyniku, sondę połączenia bez wyszukiwania oraz testy odbioru aplikacji.
 - Wskazano jeden punkt konfiguracji przyszłej domeny wyszukaj.dom i odróżniono test bezpłatny od rzeczywistego wyszukiwania z możliwym kosztem fallbacku.
