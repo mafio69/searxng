@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Adres szukaj.dom — 2026-10-19 (fire, Claude Opus 5.5)
+- Strona „Szukaj” dostępna w sieci domowej pod `http://szukaj.dom/` bez portu. Poza repo: trasa Traefika `szukaj.dom` → `127.0.0.1:8000` w `~/app/observability/proxy/dynamic/uslugi.yml`; DNS bez zmian (Pi-hole `*.dom` → 192.168.1.172); lokalny `.env`: `SEARCH_ALLOWED_HOSTS` uzupełnione o `szukaj.dom`, `mcp-search` uruchomiony ponownie.
+- Nazwa `szukaj.dom` zastępuje planowane `wyszukaj.dom` (decyzja Mariusza). Instrukcja integracji i STATUS zaktualizowane; dla MCP nadal stałe adresy HTTP.
+- Sprawdzone: Pi-hole → 192.168.1.172, `szukaj.dom/` → 200 („Szukaj — Twoje okno na internet”), `POST /api/search` z Origin `http://szukaj.dom` → 200, źródło SearXNG, 5 wyników.
+
 ### Instrukcja integracji MCP Search dla agentów — 2026-10-18
 - Dodano docs/instrukcja-integracji-mcp-search.md: ustalone endpointy HTTP, integrację backendu i pętli narzędzia, trzy stany wyniku, sondę połączenia bez wyszukiwania oraz testy odbioru aplikacji.
 - Wskazano jeden punkt konfiguracji przyszłej domeny wyszukaj.dom i odróżniono test bezpłatny od rzeczywistego wyszukiwania z możliwym kosztem fallbacku.
