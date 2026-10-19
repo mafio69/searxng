@@ -116,7 +116,10 @@ class WebAppTests(unittest.TestCase):
             (static / "index.html").write_text("<title>Search UI</title>")
             (static / "assets" / "app.js").write_text("console.log('test')")
             with TestClient(create_app(self.service, static, allowed_hosts=["testserver"])) as client:
-                self.assertIn("Search UI", client.get("/").text)
+                index_response = client.get("/")
+                self.assertIn("Search UI", index_response.text)
+                self.assertEqual(index_response.headers.get("X-Content-Type-Options"), "nosniff")
+                self.assertEqual(index_response.headers.get("Referrer-Policy"), "no-referrer")
                 self.assertEqual(client.get("/assets/app.js").status_code, 200)
                 response = client.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
                     "protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "test", "version": "1"},
@@ -163,6 +166,33 @@ class SmokeTests(unittest.TestCase):
                     self.assertEqual(json.loads(texts[0])["source"], "searxng")
                     paid.assert_not_called()
 
+    def test_authorization_header_is_not_forwarded_across_redirects(self):
+        from urllib.request import HTTPRedirectHandler
+
+        captured = []
+        fake_response = Mock()
+        fake_response.__enter__ = Mock(return_value=fake_response)
+        fake_response.__exit__ = Mock(return_value=False)
+        fake_response.status = 200
+        fake_response.read.return_value = b"{}"
+        fake_response.headers = {}
+
+        def fake_urlopen(req, timeout=40):
+            captured.append(req)
+            return fake_response
+
+        smoke = SmokeTest("https://search.example.test", mcp_auth="synthetic-fixture")
+        with patch("smoke_test.urlopen", side_effect=fake_urlopen):
+            smoke.request("/mcp", {"jsonrpc": "2.0"}, headers=smoke.auth)
+        self.assertEqual(len(captured), 1)
+        req = captured[0]
+        self.assertNotIn("Authorization", req.headers)
+        self.assertEqual(req.unredirected_hdrs.get("Authorization"), "Bearer synthetic-fixture")
+        redirected = HTTPRedirectHandler().redirect_request(
+            req, None, 302, "Found", {}, "http://other.example.test/mcp"
+        )
+        self.assertIsNone(redirected.get_header("Authorization"))
+
 
 class SearchFallbackTests(unittest.IsolatedAsyncioTestCase):
     @patch.object(server, "_perplexity")
@@ -191,6 +221,9 @@ class SearchFallbackTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ProviderTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncTearDown(self):
+        await server.close_http_client()
+
     @patch.object(server.httpx.AsyncClient, "get", new_callable=AsyncMock)
     async def test_searxng_limits_results_and_truncates_content(self, get):
         get.return_value = Mock()

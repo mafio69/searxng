@@ -41,10 +41,9 @@ class ConcurrencyTests(unittest.IsolatedAsyncioTestCase):
             return response
 
         client = AsyncMock()
-        client.__aenter__.return_value = client
         client.post.side_effect = paid_response
         state = {'day': server.datetime.date.today().isoformat(), 'count': 0}
-        with patch.object(server, 'PPLX_KEY', 'fixture-only'), patch.object(server, 'PPLX_DAILY_LIMIT', 50), patch.object(server, '_pplx', state), patch.object(server.httpx, 'AsyncClient', return_value=client):
+        with patch.object(server, 'PPLX_KEY', 'fixture-only'), patch.object(server, 'PPLX_DAILY_LIMIT', 50), patch.object(server, '_pplx', state), patch.object(server, 'get_http_client', return_value=client):
             replies = await asyncio.gather(*(server._perplexity('test', 1) for _ in range(100)), return_exceptions=True)
         self.assertEqual(client.post.await_count, 50)
         self.assertEqual(sum(isinstance(r, RuntimeError) for r in replies), 50)
@@ -58,13 +57,21 @@ class ConcurrencyTests(unittest.IsolatedAsyncioTestCase):
             await asyncio.Event().wait()
 
         client = AsyncMock()
-        client.__aenter__.return_value = client
         client.post.side_effect = waiting
         state = {'day': server.datetime.date.today().isoformat(), 'count': 0}
-        with patch.object(server, 'PPLX_KEY', 'fixture-only'), patch.object(server, '_pplx', state), patch.object(server.httpx, 'AsyncClient', return_value=client):
+        with patch.object(server, 'PPLX_KEY', 'fixture-only'), patch.object(server, '_pplx', state), patch.object(server, 'get_http_client', return_value=client):
             task = asyncio.create_task(server._perplexity('test', 1))
             await asyncio.wait_for(entered.wait(), 1)
             task.cancel()
             with self.assertRaises(asyncio.CancelledError):
                 await task
         self.assertEqual(state['count'], 1)
+
+    async def test_shared_http_client_is_reused_and_closed(self):
+        await server.close_http_client()
+        first = server.get_http_client()
+        second = server.get_http_client()
+        self.assertIs(first, second)
+        self.assertFalse(first.is_closed)
+        await server.close_http_client()
+        self.assertTrue(first.is_closed)

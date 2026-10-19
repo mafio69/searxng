@@ -49,6 +49,7 @@ class ProjectCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ROOT / ".local/tmp") as directory:
             root = Path(directory)
             (root / ".env.example").write_text("SEARXNG_SECRET=synthetic_value\n", encoding="utf-8")
+            (root / ".env.dist").write_text("SERVICE_PASSWORD=c3ludGhldGlj==\n", encoding="utf-8")
             (root / "searxng-settings.example.yml").write_text("  secret_key: synthetic_hex_value\n", encoding="utf-8")
             (root / "sample.txt").write_text("pplx-" + "1234567890abcdef1234\n", encoding="utf-8")
             (root / "opencode.json").write_text("pplx-ignored-in-policy-file\n", encoding="utf-8")
@@ -60,6 +61,7 @@ class ProjectCheckTests(unittest.TestCase):
                     "project.geany",
                     "certs/server.pem",
                     ".env.example",
+                    ".env.dist",
                     "searxng-settings.example.yml",
                     "sample.txt",
                     "opencode.json",
@@ -73,9 +75,39 @@ class ProjectCheckTests(unittest.TestCase):
                     "project.geany: forbidden_tracked_file",
                     "certs/server.pem: forbidden_tracked_file",
                     ".env.example:1: non_empty_env_template",
+                    ".env.dist:1: non_empty_env_template",
                     "searxng-settings.example.yml:1: populated_searxng_secret_key",
                     "sample.txt:1: perplexity_key",
                 ],
             )
             self.assertNotIn("synthetic_value", "\n".join(findings))
+            self.assertNotIn("c3ludGhldGlj==", "\n".join(findings))
             self.assertNotIn("1234567890abcdef1234", "\n".join(findings))
+
+    def test_scanner_inspects_git_index_when_working_copy_is_cleaned_or_deleted(self):
+        import subprocess
+
+        with tempfile.TemporaryDirectory(dir=ROOT / ".local/tmp") as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            key = "pplx-" + "1234567890abcdef1234"
+            (root / "cleaned.txt").write_text(key + "\n", encoding="utf-8")
+            (root / "deleted.txt").write_text(key + "\n", encoding="utf-8")
+            (root / "opencode.json").write_text(key + "\n", encoding="utf-8")
+            (root / ".opencode").mkdir()
+            (root / ".opencode" / "local.json").write_text(key + "\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "cleaned.txt", "deleted.txt", "opencode.json", ".opencode/local.json"],
+                cwd=root,
+                check=True,
+            )
+            (root / "cleaned.txt").write_text("safe working tree content\n", encoding="utf-8")
+            (root / "deleted.txt").unlink()
+            findings = scan_tracked_files(root)
+            self.assertEqual(
+                findings,
+                [
+                    "cleaned.txt:1: perplexity_key",
+                    "deleted.txt:1: perplexity_key",
+                ],
+            )

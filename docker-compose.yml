@@ -7,6 +7,17 @@ services:
     restart: unless-stopped
     volumes:
       - ./searxng-settings.example.yml:/etc/searxng/settings.yml:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - ai
 
@@ -22,7 +33,13 @@ services:
     ports:
       - "${SEARCH_BIND_ADDRESS:-127.0.0.1}:${SEARCH_PORT:-8890}:8000"
     depends_on:
-      - searxng
+      searxng:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - ai
 
