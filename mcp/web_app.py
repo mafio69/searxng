@@ -1,6 +1,7 @@
 """Same-origin web UI and JSON adapter for the existing MCP search service."""
 
 import contextlib
+import html
 import json
 import os
 from pathlib import Path
@@ -8,12 +9,19 @@ from pathlib import Path
 import uvicorn
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse
+from starlette.responses import FileResponse, HTMLResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 from access import McpAccessMiddleware
+from app_logging import configure_logging, get_logger, is_dev_env
 from server import HOST, PORT, close_http_client, mcp, web_search
+
+FRIENDLY_INTERNAL_ERROR = "Błąd. Przepraszamy, wystąpił problem techniczny. Spróbuj ponownie za moment."
+UI_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+}
 
 
 def is_valid_result(result):
@@ -33,62 +41,111 @@ def is_valid_result(result):
     return True
 
 
-def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, mcp_auth=None):
+def _reject_search(logger, message: str, status_code: int) -> JSONResponse:
+    logger.warning("Rejected /api/search request: %s (status=%d)", message, status_code)
+    return JSONResponse({"error": message}, status_code=status_code)
+
+
+def _gateway_error_response(dev_mode: bool, detail: str) -> JSONResponse:
+    payload = {"error": "Search unavailable"}
+    if dev_mode:
+        payload["detail"] = detail
+    return JSONResponse(payload, status_code=502)
+
+
+def _wants_html_error(request: Request) -> bool:
+    if request.url.path.startswith(("/api/", "/mcp")):
+        return False
+    return "text/html" in request.headers.get("accept", "")
+
+
+def _render_unhandled_error(request: Request, exc: Exception, dev_mode: bool):
+    detail = f"{type(exc).__name__}: {exc}"
+    if _wants_html_error(request):
+        extra = f"<pre>{html.escape(detail)}</pre>" if dev_mode else ""
+        body = (
+            '<!doctype html><html lang="pl"><head><meta charset="utf-8">'
+            "<title>szukaj.dom</title></head><body>"
+            '<main role="alert"><h1>Błąd. Przepraszamy</h1>'
+            f"<p>{FRIENDLY_INTERNAL_ERROR}</p>{extra}</main></body></html>"
+        )
+        return HTMLResponse(body, status_code=500, headers=UI_SECURITY_HEADERS)
+    payload = {"error": FRIENDLY_INTERNAL_ERROR}
+    if dev_mode:
+        payload["detail"] = detail
+    return JSONResponse(payload, status_code=500)
+
+
+def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, mcp_auth=None, app_env=None):
     assets = Path(static_dir) if static_dir else Path(__file__).resolve().parent / "static"
+    dev_mode = is_dev_env(app_env)
+    logger = get_logger()
 
     async def search_endpoint(request: Request):
         # Do not accept cross-origin form submissions or send provider errors to browsers.
         if request.headers.get("content-type", "").split(";")[0].strip() != "application/json":
-            return JSONResponse({"error": "JSON required"}, status_code=415)
+            return _reject_search(logger, "JSON required", 415)
         origin = request.headers.get("origin")
         if origin and origin != f"{request.url.scheme}://{request.url.netloc}":
-            return JSONResponse({"error": "Origin not allowed"}, status_code=403)
+            return _reject_search(logger, "Origin not allowed", 403)
         if request.headers.get("sec-fetch-site") == "cross-site":
-            return JSONResponse({"error": "Origin not allowed"}, status_code=403)
+            return _reject_search(logger, "Origin not allowed", 403)
         body = bytearray()
         async for chunk in request.stream():
             body.extend(chunk)
             if len(body) > 4096:
-                return JSONResponse({"error": "Request too large"}, status_code=413)
+                return _reject_search(logger, "Request too large", 413)
         try:
             payload = json.loads(body)
         except (ValueError, UnicodeDecodeError):
-            return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+            return _reject_search(logger, "Invalid JSON", 400)
         if not isinstance(payload, dict):
-            return JSONResponse({"error": "Object required"}, status_code=400)
+            return _reject_search(logger, "Object required", 400)
         query = payload.get("query")
         count = payload.get("max_results", 10)
-        if (not isinstance(query, str) or not query.strip() or len(query) > 500
-                or type(count) is not int or not 1 <= count <= 10):
-            return JSONResponse({"error": "Invalid search arguments"}, status_code=400)
+        is_invalid_query = not isinstance(query, str) or not query.strip() or len(query) > 500
+        is_invalid_count = type(count) is not int or not 1 <= count <= 10
+        if is_invalid_query or is_invalid_count:
+            return _reject_search(logger, "Invalid search arguments", 400)
         try:
             result = json.loads(await search_service(query.strip(), count))
             if not is_valid_result(result):
                 raise ValueError("Invalid search result")
-        except Exception:
-            return JSONResponse({"error": "Search unavailable"}, status_code=502)
+        except Exception as exc:
+            logger.error("Search service failure on /api/search: %s", type(exc).__name__, exc_info=True)
+            return _gateway_error_response(dev_mode, f"{type(exc).__name__}: {exc}")
         if result.get("status") == "error" or result.get("errors"):
-            return JSONResponse({"error": "Search unavailable"}, status_code=502)
+            provider_codes = ",".join(str(item) for item in result.get("errors", []))
+            logger.error("Search providers unavailable on /api/search: %s", provider_codes or "status=error")
+            return _gateway_error_response(dev_mode, f"Provider errors: {provider_codes or 'status=error'}")
         # Raw exception strings from providers can contain operational details.
+        logger.info("Completed /api/search via %s (%d results)", result.get("source"), len(result.get("results", [])))
         return JSONResponse({"status": result.get("status", "ok" if result["results"] else "empty"),
                              "source": result.get("source"), "results": result.get("results", [])})
 
     async def index(request: Request):
         if not (assets / "index.html").is_file():
+            logger.warning("Frontend index.html missing in %s", assets)
             return JSONResponse({"error": "Frontend not built. See README.md."}, status_code=503)
         return FileResponse(assets / "index.html", headers={
             "Cache-Control": "no-cache",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
+            **UI_SECURITY_HEADERS,
         })
 
     async def favicon(request: Request):
         if not (assets / "favicon.svg").is_file():
             return JSONResponse({"error": "Not found"}, status_code=404)
-        return FileResponse(assets / "favicon.svg", headers={
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
-        })
+        return FileResponse(assets / "favicon.svg", headers=UI_SECURITY_HEADERS)
+
+    async def handle_unhandled_error(request: Request, exc: Exception):
+        logger.error(
+            "Unhandled error on %s %s: %s",
+            request.method,
+            request.url.path,
+            type(exc).__name__,
+            exc_info=exc,
+        )
+        return _render_unhandled_error(request, exc, dev_mode)
 
     # Reuse FastMCP's application, including its existing session-manager lifespan.
     app = mcp.streamable_http_app()
@@ -103,6 +160,8 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
                 await close_http_client()
 
     app.router.lifespan_context = lifespan
+    app.add_exception_handler(Exception, handle_unhandled_error)
+    app.add_exception_handler(500, handle_unhandled_error)
     app.add_middleware(McpAccessMiddleware, auth_value=(
         os.getenv("MCP_AUTH_TOKEN", "") if mcp_auth is None else mcp_auth
     ))
@@ -122,4 +181,5 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
 
 
 if __name__ == "__main__":
+    configure_logging()
     uvicorn.run(create_app(), host=HOST, port=PORT, access_log=False)

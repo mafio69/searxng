@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Systemowa obsługa błędów (`dev`/`prod`), rotacja logów `.gz` i poprawka Qodana — 2026-10-19
+- Naprawiono ostrzeżenie Qodana `JSIgnoredPromiseFromCall` w `web/src/App.jsx` (`void runSearch(...)`).
+- Wdrożono systemową obsługę błędów zależną od środowiska (`APP_ENV=prod` domyślnie, `APP_ENV=dev` do debugowania): na produkcji aplikacja (zarówno API/HTML w `mcp/web_app.py`, klient `web/src/api.js`, jak i `web/src/ErrorBoundary.jsx`) wyświetla wyłącznie przyjazny komunikat „Błąd. Przepraszamy...” bez szczegółów technicznych, natomiast w `dev` dołącza szczegóły wyjątku.
+- Dodano moduł `mcp/app_logging.py`: domyślne logowanie od `WARNING` wzwyż (łatwe przełączenie na `INFO` lub `DEBUG` przez `LOG_LEVEL`), logowanie wszystkich ostrzeżeń i błędów na produkcji oraz automatyczną rotację i kompresję archiwów `.gz` (`CompressedRotatingFileHandler` w `.local/logs/szukaj.log`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`) wraz z kompresją logów Dockera (`compress: "true"`) w `docker-compose.yml`.
+- Walidacja: Ruff PASS, tracked-files PASS, backend 55/55, frontend 19/19, build i diff-check roboczy/staged PASS.
+
 ### Przygotowanie do wydania 1.0.0 (skaner sekretów, D1–D8, O1–O5, W3, PR #2) — 2026-10-19
 - Zmieniono nazwę projektu/pakietu UI na `szukaj` (`szukaj-ui` w `web/package.json`, linki `mafio69/szukaj`), przebudowano prezentację `README.md`, ustawiono tytuł `<title>szukaj.dom</title>` w `web/index.html`, markę `szukaj.dom` w `web/src/App.jsx` oraz ujednolicono nazwę domeny `szukaj.dom` w dokumentacji (`REPO.md`, `HANDOFF.md`, `STATUS.md`).
 - Dodano skaner śledzonych plików i indeksu Git `scripts/check_tracked_files.py` do bramki `scripts/check_project.py` oraz usunięto `searxng.geany` ze śledzenia Git.
