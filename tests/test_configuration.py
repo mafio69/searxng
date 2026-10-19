@@ -43,3 +43,13 @@ class ConfigurationTests(unittest.TestCase):
         self.assertIn('./searxng-settings.example.yml:/etc/searxng/settings.yml:ro', compose)
         self.assertNotIn('./searxng-settings.yml:', compose)
         self.assertIn('/searxng-settings.yml', (ROOT / '.gitignore').read_text().splitlines())
+
+    def test_searxng_timeouts_and_compose_health_and_logging_are_configured(self):
+        settings = (ROOT / 'searxng-settings.example.yml').read_text()
+        self.assertIn('request_timeout: 3.0', settings)
+        self.assertIn('max_request_timeout: 8.0', settings)
+        self.assertIn('SearxEngineTooManyRequests: 600', settings)
+        compose = (ROOT / 'docker-compose.yml').read_text()
+        self.assertIn('http://127.0.0.1:8080/healthz', compose)
+        self.assertIn('condition: service_healthy', compose)
+        self.assertEqual(compose.count('driver: "json-file"'), 2)
