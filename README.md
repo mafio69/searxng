@@ -190,8 +190,12 @@ Do pracy nad frontendem służy `npm --prefix web run dev`. Serwer Vite przekazu
 
 - [Instrukcja integracji MCP Search dla agenta](docs/instrukcja-integracji-mcp-search.md) — start wdrożenia w aplikacji, aktualne adresy HTTP, sesja MCP i testy odbioru.
 - [MCP dla AI i integratorów](docs/MCP-USAGE.md) — kontrakt narzędzia, protokół, błędy i plan testu integracyjnego.
-- [Instrukcja integracji](docs/INSTRUKCJA.md) — przykłady klientów; zawiera także starsze ścieżki środowiska autora, które należy dostosować.
+- [Instrukcja integracji](docs/INSTRUKCJA.md) — codzienne operacje i przykłady konfiguracji klientów MCP.
 - [Stan projektu](STATUS.md) i [historia zmian](CHANGELOG.md).
 - [Zasady pracy agentów](AGENTS.md), [Git flow](GIT-FLOW.md) i [przekazanie sesji](HANDOFF.md).
+
+## Wersja i status wydania
+
+Ostatnie oznaczone wydanie to `0.1.0` (bieżące zmiany rozwojowe znajdują się w sekcji `[Unreleased]` w [CHANGELOG.md](CHANGELOG.md)). Oznaczenie stabilnego wydania `1.0.0` wymaga pozytywnego potwierdzenia testu integracji MCP przez aplikację kliencką WirralAI oraz zamknięcia kontroli wdrożeniowych opisanych w [STATUS.md](STATUS.md).
 
 Opis odpowiada kodowi w repozytorium. Nie stanowi potwierdzenia działania konkretnego wdrożenia ani integracji z wybranym klientem MCP.
