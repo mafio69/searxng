@@ -48,10 +48,11 @@ class ProjectCheckTests(unittest.TestCase):
     def test_scanner_detects_forbidden_files_and_synthetic_credentials_without_leaking_values(self):
         with tempfile.TemporaryDirectory(dir=ROOT / ".local/tmp") as directory:
             root = Path(directory)
-            (root / ".env.example").write_text("SEARXNG_SECRET=synthetic_value\n", encoding="utf-8")
-            (root / ".env.dist").write_text("SERVICE_PASSWORD=c3ludGhldGlj==\n", encoding="utf-8")
-            (root / "searxng-settings.example.yml").write_text("  secret_key: synthetic_hex_value\n", encoding="utf-8")
+            (root / ".env.example").write_text("SEARXNG_SECRET=" + "synthetic_value\n", encoding="utf-8")
+            (root / ".env.dist").write_text("SAMPLE_OPTION=" + "padded_value==\n", encoding="utf-8")
+            (root / "searxng-settings.example.yml").write_text("  secret_key: " + "synthetic_hex_value\n", encoding="utf-8")
             (root / "sample.txt").write_text("pplx-" + "1234567890abcdef1234\n", encoding="utf-8")
+            (root / "inline.py").write_text('EXAMPLE = "' + "SERVICE_PASSWORD=" + 'synthetic_value"\n', encoding="utf-8")
             (root / "opencode.json").write_text("pplx-ignored-in-policy-file\n", encoding="utf-8")
             findings = scan_tracked_files(
                 root,
@@ -64,6 +65,7 @@ class ProjectCheckTests(unittest.TestCase):
                     ".env.dist",
                     "searxng-settings.example.yml",
                     "sample.txt",
+                    "inline.py",
                     "opencode.json",
                 ],
             )
@@ -78,10 +80,11 @@ class ProjectCheckTests(unittest.TestCase):
                     ".env.dist:1: non_empty_env_template",
                     "searxng-settings.example.yml:1: populated_searxng_secret_key",
                     "sample.txt:1: perplexity_key",
+                    "inline.py:1: populated_env_secret",
                 ],
             )
             self.assertNotIn("synthetic_value", "\n".join(findings))
-            self.assertNotIn("c3ludGhldGlj==", "\n".join(findings))
+            self.assertNotIn("padded_value==", "\n".join(findings))
             self.assertNotIn("1234567890abcdef1234", "\n".join(findings))
 
     def test_scanner_inspects_git_index_when_working_copy_is_cleaned_or_deleted(self):
