@@ -166,6 +166,33 @@ class SmokeTests(unittest.TestCase):
                     self.assertEqual(json.loads(texts[0])["source"], "searxng")
                     paid.assert_not_called()
 
+    def test_authorization_header_is_not_forwarded_across_redirects(self):
+        from urllib.request import HTTPRedirectHandler
+
+        captured = []
+        fake_response = Mock()
+        fake_response.__enter__ = Mock(return_value=fake_response)
+        fake_response.__exit__ = Mock(return_value=False)
+        fake_response.status = 200
+        fake_response.read.return_value = b"{}"
+        fake_response.headers = {}
+
+        def fake_urlopen(req, timeout=40):
+            captured.append(req)
+            return fake_response
+
+        smoke = SmokeTest("https://search.example.test", mcp_auth="synthetic-fixture")
+        with patch("smoke_test.urlopen", side_effect=fake_urlopen):
+            smoke.request("/mcp", {"jsonrpc": "2.0"}, headers=smoke.auth)
+        self.assertEqual(len(captured), 1)
+        req = captured[0]
+        self.assertNotIn("Authorization", req.headers)
+        self.assertEqual(req.unredirected_hdrs.get("Authorization"), "Bearer synthetic-fixture")
+        redirected = HTTPRedirectHandler().redirect_request(
+            req, None, 302, "Found", {}, "http://other.example.test/mcp"
+        )
+        self.assertIsNone(redirected.get_header("Authorization"))
+
 
 class SearchFallbackTests(unittest.IsolatedAsyncioTestCase):
     @patch.object(server, "_perplexity")

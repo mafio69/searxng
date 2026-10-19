@@ -29,9 +29,13 @@ class SmokeTest:
         self.auth = {"Authorization": "Bearer " + mcp_auth} if mcp_auth else {}
 
     def request(self, path, payload=None, expected=200, headers=None):
+        merged_headers = {'Content-Type': 'application/json', **(headers or {})}
+        auth_header = merged_headers.pop('Authorization', None)
         request = Request(urljoin(self.base, path.lstrip('/')),
                           data=json.dumps(payload).encode() if payload is not None else None,
-                          headers={'Content-Type': 'application/json', **(headers or {})})
+                          headers=merged_headers)
+        if auth_header:
+            request.add_unredirected_header('Authorization', auth_header)
         try:
             response = urlopen(request, timeout=40)
         except HTTPError as error:
