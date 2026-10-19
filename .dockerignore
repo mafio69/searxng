@@ -2,6 +2,7 @@
 !mcp/
 !mcp/server.py
 !mcp/web_app.py
+!mcp/access.py
 !mcp/requirements.txt
 !web/
 !web/package.json

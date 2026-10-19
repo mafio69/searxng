@@ -101,7 +101,7 @@ export default function App() {
       const result = await search(normalized, maxResults, controller.signal);
       if (id !== requestId.current) return;
       setData(result); setElapsed((performance.now() - started) / 1000);
-      if (result.source === null) setError('Nie udało się pobrać wyników z dostępnych wyszukiwarek. Spróbuj ponownie za moment.');
+      if (result.status === 'error' || (result.source === null && result.status !== 'empty')) setError('Nie udało się pobrać wyników z dostępnych wyszukiwarek. Spróbuj ponownie za moment.');
     } catch (failure) {
       if (id !== requestId.current) return;
       setError(failure.name === 'AbortError' ? 'Wyszukiwanie trwało zbyt długo. Spróbuj ponownie.' : failure.message);

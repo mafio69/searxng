@@ -1,9 +1,8 @@
 use_default_settings: true
-
 server:
-  secret_key: "5c32e61615662754b11b4dd0c72f911035046479d0f4d276c1854ffca40dc137"
+  # Overridden by SEARXNG_SECRET; never put a real value here.
+  secret_key: ""
   limiter: false
-
 search:
   formats:
     - html

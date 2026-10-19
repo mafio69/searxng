@@ -1,5 +1,7 @@
 # MCP Search — instrukcja dla AI i integratorów
 
+Wdrażasz MCP Search w aplikacji? Zacznij od [instrukcji integracji dla agenta](instrukcja-integracji-mcp-search.md): wybór adresu, wdrożenie i testy krok po kroku. Ten dokument jest szczegółowym kontraktem usługi.
+
 ## Cel i zakres
 
 Serwer udostępnia jedno narzędzie MCP: `web_search`. Wyszukuje przez SearXNG,
@@ -21,7 +23,7 @@ Transport: **MCP Streamable HTTP**.
 `127.0.0.1` wewnątrz kontenera wskazuje ten kontener. Aplikacja w kontenerze
 musi być podłączona do sieci `ai`, aby użyć nazwy `mcp-search`.
 Compose publikuje port 8890 tylko na loopback hosta. Nie określa publicznego
-adresu serwera. Kod aplikacji nie dodaje własnej warstwy uwierzytelniania.
+adresu serwera. Po ustawieniu MCP_AUTH_TOKEN wszystkie żądania /mcp wymagają nagłówka Authorization: Bearer z wartością pobraną wyłącznie z bezpiecznej konfiguracji backendu. Brak konfiguracji zachowuje tryb bez uwierzytelnienia. Nie przekazuj tej wartości modelowi ani przeglądarce.
 
 Użyj klienta MCP obsługującego Streamable HTTP. Przeprowadź inicjalizację
 sesji, pobierz `tools/list`, a narzędzie wywołuj przez `tools/call`.
@@ -34,7 +36,7 @@ Nazwa serwera: `search`. Nazwa narzędzia: `web_search`.
 
 | Argument | Typ | Wymagany | Zachowanie |
 |---|---|---|---|
-| `query` | string | tak | Zapytanie przekazane do wyszukiwarki |
+| `query` | string | tak | Niepuste po trim, maksymalnie 1000 znaków Unicode |
 | `max_results` | integer | nie | Domyślnie 5; kod ogranicza wartość do 1–10 |
 
 Przykładowe argumenty:
@@ -43,11 +45,14 @@ Przykładowe argumenty:
 {"query":"MCP Streamable HTTP specification","max_results":3}
 ```
 
-Warstwa aplikacji nie odrzuca pustego zapytania. Klient powinien sprawdzić,
-że `query` po usunięciu białych znaków nie jest pusty.
+Narzędzie odrzuca puste i zbyt długie zapytania przed wywołaniem dostawców.
+Przeglądarkowe UI/API zachowuje swój bardziej restrykcyjny limit 500 znaków.
 Aktualny schemat argumentów pobieraj z `tools/list`.
 
 ## Odczyt wyniku
+
+Wspólne syntetyczne przykłady do testów klientów: [web_search.example.json](contract/web_search.example.json).
+Testy `tests/test_mcp_contract.py` porównują wszystkie trzy z odpowiedzią pełnej sesji MCP.
 
 Funkcja zwraca **tekst zawierający JSON**. W odpowiedzi MCP szukaj tekstowego
 bloku `content` i parsuj jego `text` jako JSON. Nie zakładaj, że wynik
@@ -57,6 +62,8 @@ Przykładowy JSON wewnątrz bloku tekstowego (dane ilustracyjne):
 
 ```json
 {
+  "status": "ok",
+  "errors": [],
   "source": "searxng",
   "results": [
     {
@@ -73,21 +80,23 @@ Każdy wynik zawiera `title`, `url`, `snippet`; tytuł i URL mogą być `null`,
 a fragment pusty. Fragment jest ucinany do 400 znaków.
 Liczba wyników może być mniejsza od zamówionej.
 
-Gdy obie próby zakończą się błędem, serwer zwraca JSON podobny do:
+Status rozstrzyga wynik: `ok` ma wyniki i puste errors, `empty` oznacza poprawne wyszukanie bez wyników, `error` oznacza awarię z niepustymi kodami errors. Przy empty/error source jest null, results jest puste.
+
+Poprawny brak wyników:
 
 ```json
-{
-  "source": null,
-  "results": [],
-  "errors": ["searxng: pusty wynik", "perplexity: brak PPLX_API_KEY"]
-}
+{"status":"empty","source":null,"results":[],"errors":[]}
 ```
 
-Sprawdzaj zarówno błędy transportu/protokołu i MCP `isError`, jak i pola
-wewnętrznego JSON. Błąd dostawców jest zwracany jako zwykły tekstowy wynik
-narzędzia, więc samo udane `tools/call` nie oznacza udanego wyszukania.
-Perplexity może także zwrócić `source: "perplexity-fast"` i pustą listę;
-to również oznacza brak materiału do odpowiedzi.
+Awaria (wyłącznie bezpieczne kody, bez treści wyjątku):
+
+```json
+{"status":"error","source":null,"results":[],"errors":["searxng_timeout","perplexity_no_key"]}
+```
+
+Brak skonfigurowanego opcjonalnego Perplexity po poprawnym pustym SearXNG daje empty. Błąd dostawcy lub wyczerpany limit bez wyników daje error, także gdy drugi dostawca zwrócił poprawne zero wyników. Udany fallback z wynikami daje ok i puste errors. API przeglądarki mapuje awarię na HTTP 502.
+
+Sprawdzaj też błędy transportu/protokołu i MCP isError. Błąd dostawcy jest tekstowym wynikiem narzędzia; samo udane tools/call nie oznacza udanego wyszukania.
 
 ## Przebieg i ograniczenia
 
@@ -102,9 +111,8 @@ nie jest gwarantowanym maksymalnym czasem całego wywołania.
 
 Domyślny dzienny limit Perplexity to 50. Licznik istnieje tylko w pamięci
 procesu, resetuje się po restarcie i przy zmianie lokalnej daty procesu.
-Zlicza odpowiedzi HTTP zaakceptowane przez `raise_for_status()`, przed
-parsowaniem JSON. Nie jest trwałym ani współdzielonym limitem kosztów;
-kod nie synchronizuje go między równoległymi wywołaniami.
+Rezerwuje próbę atomowo przed HTTP; błędy i anulowanie nie zwracają rezerwacji.
+Blokada nie obejmuje sieci. Nie jest to trwały ani współdzielony między procesami limit kosztów.
 
 Sukces z Perplexity nie zawiera informacji o wcześniejszym błędzie SearXNG.
 Serwer nie pobiera pełnej treści stron z wyników i nie oferuje osobnego
@@ -154,11 +162,19 @@ fallbacku może zużywać płatne zapytania Perplexity.
 
 ## Konfiguracja i utrzymanie
 
-Nazwy zmiennych: `SEARXNG_URL`, `SEARXNG_LANG`, `PPLX_API_KEY`,
-`PPLX_DAILY_LIMIT`, `MCP_HOST`, `MCP_PORT`. Sekrety konfiguruje operator;
-agent integrujący nie potrzebuje odczytu `.env`.
+Nazwy zmiennych: `SEARXNG_SECRET`, `MCP_AUTH_TOKEN`, `PPLX_API_KEY`,
+`PPLX_DAILY_LIMIT`, `SEARXNG_LANG`, `SEARCH_ALLOWED_HOSTS`, `SEARCH_PORT`,
+`SEARCH_BIND_ADDRESS`, `SEARXNG_URL`, `MCP_HOST`, `MCP_PORT` (pełny opis
+i wartości domyślne w tabeli w [README.md](../README.md)). Sekrety konfiguruje
+operator; agent integrujący nie potrzebuje odczytu `.env`.
 
-Serwer używa Python 3.12 w obrazie oraz `mcp>=1.2,<2` i `httpx>=0.27`.
+Serwer używa Python 3.12 w obrazie oraz `mcp==1.30.0` i `httpx>=0.27`.
 Nie podnoś MCP do v2 w ramach integracji — implementacja używa FastMCP v1.
 Polecenia operacyjne opisuje [INSTRUKCJA.md](INSTRUKCJA.md), a obowiązujące
 zasady pracy: [AGENTS.md](../AGENTS.md) i [GIT-FLOW.md](../GIT-FLOW.md).
+
+Smoke nie wczytuje pliku .env; przy ochronie MCP operator musi przekazać MCP_AUTH_TOKEN w środowisku procesu testowego. Nigdy nie wypisuj wartości.
+
+## Potwierdzona negocjacja protokołu
+
+MCP 1.30.0 jest przypięte w mcp/requirements.txt. Lokalny test initialize potwierdza negocjację 2024-11-05, 2025-03-26, 2025-06-18 i 2025-11-25. Nieznana wersja klienta otrzymuje 2025-11-25; klient musi ją zaakceptować przed kontynuacją. To test kodu z atrapami, nie potwierdzenie aktualizacji działającego kontenera.

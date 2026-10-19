@@ -20,15 +20,22 @@ Te reguły obowiązują każdego agenta AI w tym repozytorium. Gdy polecenie jes
 5. Nie używaj także `/var/tmp`, `/root`, `/run`, `/dev/shm`, `/etc`, `/var`, `/usr`, `/opt`, `/srv`, `/mnt`, `/media`, `/lost+found` ani katalogów innych użytkowników.
 6. Nie czytaj, nie listuj, nie przeszukuj i nie edytuj `.local/secret/` ani jego podkatalogów.
 
-## 3. Środowisko, dxrun i dotenvx
+## 3. Środowisko i narzędzia jakości
 
-1. Do testów, lintingu, typechecka, buildów, formatowania i lokalnych narzędzi jakości używaj `dxrun` bez dodatkowego pytania.
-2. Używaj formy `dxrun -- KONKRETNE_POLECENIE`.
-3. Użycie `dxrun` nie daje zgody na migracje, seedowanie, usuwanie lub zmianę danych, deployment, push, PR, instalację zależności ani działania zewnętrzne. Te czynności nadal wymagają wyraźnej zgody Mariusza.
-4. Nie analizuj, nie lokalizuj, nie czytaj, nie przeszukuj, nie kopiuj, nie wyjaśniaj ani nie modyfikuj `dxrun`, jego wrapperów, dowiązań, aliasów, funkcji powłoki, konfiguracji ani sposobu działania.
-5. Nie analizuj skryptów Bash/powłoki (`*.sh`, `*.bash`, `*.zsh`, `*.fish`, skryptów bez rozszerzenia, wrapperów i skryptów uruchamialnych), chyba że Mariusz poda dokładną ścieżkę i wyraźnie zleci analizę albo zmianę danego pliku. Wyjątek nigdy nie obejmuje `dxrun`, dotenvx, kluczy ani wrapperów środowiska.
-6. `dotenvx` jest bezwzględnie zabroniony. Nie uruchamiaj, nie analizuj i nie wywołuj pośrednio `dotenvx`, w tym `run`, `get`, `decrypt`, `encrypt`, `rotate` i `keypair`.
-7. Nie uruchamiaj `bash -x`, `sh -x`, `set -x`, `strace`, `ltrace`, `source`, `. plik`, `eval`, `env`, `printenv`, `export -p` ani `set` w celu poznania środowiska, sekretów lub działania wrapperów.
+### Stała zgoda Mariusza: Ruff — allow
+
+- Agenci mogą bez ponownego pytania uruchamiać `python3 scripts/check_project.py` oraz lokalny `PYTHONPATH=.local/tools/ruff python3 -m ruff check --config ruff.toml mcp scripts tests` w tym repozytorium. To zgoda na kontrole jakości, nie na pozostałe działania systemowe lub zewnętrzne.
+- Instalacja przypiętej wersji z `requirements-dev.txt` do ignorowanego `.local/tools/ruff`, z cache i plikami tymczasowymi w `.local/`, została zatwierdzona przez Mariusza. Ruff nie jest zależnością obrazu aplikacji.
+- Przed każdym commitem obowiązuje cały zestaw `python3 scripts/check_project.py`; brak Ruff lub błąd dowolnej kontroli blokuje commit. Sam lint nie zastępuje testów.
+- Domyślnie używaj `check` bez `--fix`. Automatyczne poprawki i formatowanie są zmianami kodu: tylko w zakresie zadania, z przeglądem diff i pełnymi testami. Nie używaj `--unsafe-fixes` bez wyraźnego zlecenia.
+- Analizuj wyłącznie kod projektu w `mcp`, `scripts`, `tests`, według `ruff.toml`. Zgoda nie obejmuje odczytu sekretów, wyłączania reguł bezpieczeństwa ani zmiany konfiguracji uprawnień agentów.
+
+1. Do testów, lintingu, typechecka, buildów, formatowania i lokalnych narzędzi jakości stosuj polecenia opisane w `README.md` i `REPO.md`, z zachowaniem wymaganych zgód na Bash.
+2. Uruchamianie testów i kontroli jakości nie daje zgody na migracje, seedowanie, usuwanie lub zmianę danych, deployment, push, PR, instalację zależności ani działania zewnętrzne. Te czynności nadal wymagają wyraźnej zgody Mariusza.
+3. Nie analizuj, nie lokalizuj, nie czytaj, nie przeszukuj, nie kopiuj, nie wyjaśniaj ani nie modyfikuj wrapperów środowiska, ich dowiązań, aliasów, funkcji powłoki, konfiguracji ani sposobu działania.
+4. Nie analizuj skryptów Bash/powłoki (`*.sh`, `*.bash`, `*.zsh`, `*.fish`, skryptów bez rozszerzenia, wrapperów i skryptów uruchamialnych), chyba że Mariusz poda dokładną ścieżkę i wyraźnie zleci analizę albo zmianę danego pliku. Wyjątek nigdy nie obejmuje dotenvx, kluczy ani wrapperów środowiska.
+5. `dotenvx` jest bezwzględnie zabroniony. Nie uruchamiaj, nie analizuj i nie wywołuj pośrednio `dotenvx`, w tym `run`, `get`, `decrypt`, `encrypt`, `rotate` i `keypair`.
+6. Nie uruchamiaj `bash -x`, `sh -x`, `set -x`, `strace`, `ltrace`, `source`, `. plik`, `eval`, `env`, `printenv`, `export -p` ani `set` w celu poznania środowiska, sekretów lub działania wrapperów.
 
 ## 4. Sekrety i dane chronione
 
@@ -40,7 +47,7 @@ Te reguły obowiązują każdego agenta AI w tym repozytorium. Gdy polecenie jes
 
 ## 5. Bash, baza i system
 
-1. Zwykłe polecenia Bash poza `dxrun` wymagają uprzedniej zgody Mariusza.
+1. Polecenia Bash wymagają uprzedniej zgody Mariusza.
 2. Baza danych jest domyślnie tylko do odczytu.
 3. Bez wyraźnej zgody nie wykonuj `DELETE`, `UPDATE`, `INSERT`, `DROP`, `TRUNCATE`, migracji, seedów, surowego SQL zmieniającego dane ani operacji zmieniających infrastrukturę.
 4. Nie używaj `sudo`, `su`, `pkexec`, `doas`, SSH, SCP, rsync, mount, Docker exec ani zdalnych poleceń bez osobnej zgody.

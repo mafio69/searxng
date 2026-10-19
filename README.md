@@ -33,12 +33,14 @@ Potrzebujesz Dockera z Compose, dostępu do Internetu dla wyszukiwania i pobrani
 
 ### 1. Przygotuj konfigurację
 
-Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG może być pusty. Nie dodawaj go do Gita.
+Utwórz lokalny plik `.env` na podstawie `.env.example` i ustaw nowy `SEARXNG_SECRET`. Pozostałe puste pola używają domyślnych wartości lub wyłączają opcjonalną integrację. Compose wymaga pliku i klucza. Nie dodawaj rzeczywistego `.env` do Gita.
 
 | Zmienna | Domyślne zachowanie / zastosowanie |
 |---|---|
+| `SEARXNG_SECRET` | Wymagany nowy losowy klucz SearXNG, ustawiany wyłącznie lokalnie; Compose nie wystartuje bez wartości |
+| `MCP_AUTH_TOKEN` | Opcjonalny sekret Bearer dla wszystkich żądań `/mcp`; konfiguruj tylko lokalnie, nigdy w kodzie UI |
 | `PPLX_API_KEY` | Opcjonalny klucz Perplexity; brak uniemożliwia użycie źródła awaryjnego |
-| `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit odpowiedzi Perplexity zliczanych w procesie |
+| `PPLX_DAILY_LIMIT` | Domyślnie `50`; limit prób Perplexity rezerwowanych w procesie |
 | `SEARXNG_LANG` | Domyślnie `auto`; język wyszukiwania |
 | `SEARCH_ALLOWED_HOSTS` | Zaufane nazwy hostów oddzielone przecinkami; domyślnie `127.0.0.1,localhost,mcp-search`. Przy własnym adresie LAN/domenie dodaj go jawnie, zachowując potrzebne dotychczasowe nazwy. Nie używaj `*`. |
 | `SEARCH_PORT` | Domyślnie `8890`; port publikowany na hoście |
@@ -46,7 +48,7 @@ Utwórz lokalny plik `.env`. Compose wymaga jego istnienia; dla samego SearXNG m
 
 Compose ustawia `SEARXNG_URL` na `http://searxng:8080`. Zostaw domyślne `MCP_HOST` (`0.0.0.0`) i `MCP_PORT` (`8000`) wewnątrz kontenera, aby zachować zgodność z mapowaniem portów.
 
-SearXNG korzysta z `searxng-settings.yml`. Przed własnym wdrożeniem skonfiguruj lokalnie własny losowy `server.secret_key` i upewnij się, że `search.formats` dopuszcza format `json`. Wartości sekretów nie publikuj w repozytorium.
+SearXNG montuje publiczny `searxng-settings.example.yml` z pustym `server.secret_key`; rzeczywista wartość pochodzi wyłącznie ze zmiennej `SEARXNG_SECRET` ustawionej lokalnie w `.env` lub środowisku operatora. Wygeneruj nową losową wartość — starego klucza z historii nie używaj ponownie. Nie wklejaj go do czatu ani logów. Dotychczasowy lokalny `searxng-settings.yml` pozostaje na dysku, ale nie jest już śledzony ani montowany przez Compose. Ta zmiana nie usuwa starego klucza z historii Git; rotację i uruchomienie nowego obrazu potwierdza operator.
 
 ### 2. Przygotuj sieć i uruchom usługi
 
@@ -76,6 +78,8 @@ W kliencie obsługującym **MCP Streamable HTTP** dodaj adres właściwy dla jeg
 | Na tym samym hoście co Docker | `http://127.0.0.1:8890/mcp` |
 | W kontenerze podłączonym do sieci `ai` | `http://mcp-search:8000/mcp` |
 
+Jeżeli operator ustawił `MCP_AUTH_TOKEN`, klient musi wysyłać `Authorization: Bearer <wartość z bezpiecznej konfiguracji>` w każdym żądaniu MCP, także podczas inicjalizacji, odczytu strumienia i zamykania sesji. Bez konfiguracji ochrona jest wyłączona. Dotyczy tylko MCP; udostępnienie całego UI/API poza zaufaną siecią wymaga osobnej kontroli dostępu.
+
 Po inicjalizacji sesji klient znajdzie narzędzie:
 
 ```text
@@ -88,7 +92,7 @@ Przykładowe argumenty:
 {"query": "jak działa metawyszukiwarka", "max_results": 3}
 ```
 
-Narzędzie zwraca tekst zawierający JSON z polami `source` i `results`. Źródło to `searxng`, `perplexity-fast` albo `null`, gdy obie próby zawiodą. Limit wyników jest ograniczany do zakresu 1–10.
+Narzędzie zwraca tekst JSON z polami `status`, `source`, `results`, `errors`. Status to `ok`, `empty` lub `error`; przy braku wyników i awarii źródło jest `null`, a rozróżnienie wynika ze statusu. Limit wyników jest ograniczany do zakresu 1–10.
 
 Pełny kontrakt, obsługę błędów i instrukcję dla agentów znajdziesz w **[docs/MCP-USAGE.md](docs/MCP-USAGE.md)**. Endpoint `/mcp` wymaga protokołu MCP, więc nie przyjmuje samego JSON-a z zapytaniem jak zwykłe API REST.
 
@@ -102,7 +106,7 @@ curl http://127.0.0.1:8890/api/search \
   -d '{"query":"metawyszukiwarka SearXNG","max_results":5}'
 ```
 
-API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwraca `source` oraz `results` z polami `title`, `url`, `snippet`. Szczegóły błędów dostawców nie trafiają do przeglądarki. Pusta lista i `source: null` oznaczają nieudane wyszukiwanie, nawet przy HTTP 200.
+API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwraca `status`, `source` oraz `results` z polami `title`, `url`, `snippet`. `status: empty`, pusta lista i `source: null` oznaczają poprawne wyszukanie bez wyników. Awaria daje HTTP 502 bez szczegółów dostawców. Narzędzie MCP dopuszcza do 1000 znaków Unicode i odrzuca puste zapytania przed HTTP.
 
 ## Gdy coś nie działa
 
@@ -119,7 +123,7 @@ API przyjmuje niepuste zapytanie do 500 znaków i `max_results` od 1 do 10. Zwra
 docker compose logs --tail=50 searxng mcp-search
 ```
 
-Limit Perplexity jest przechowywany w pamięci procesu i resetuje się po restarcie lub zmianie daty. Nie jest trwałym, współdzielonym zabezpieczeniem budżetu ani ścisłym limitem przy równoległych żądaniach.
+Limit Perplexity jest przechowywany w pamięci procesu i resetuje się po restarcie lub zmianie daty. Rezerwacja prób jest atomowa w jednym procesie; błędy i anulowanie nie zwracają rezerwacji. Nie jest to trwały ani współdzielony między procesami budżet.
 
 ## Smoke test po uruchomieniu
 
@@ -153,24 +157,45 @@ Backend obrazu używa Python 3.12, FastMCP v1, HTTPX i Starlette. Frontend to Re
 | `web/src/App.test.jsx` | Testy interfejsu |
 | `docker-compose.yml` | Dwie usługi i ich połączenie |
 
-Po zainstalowaniu zależności backendu z `mcp/requirements.txt` oraz frontendu z `web/package.json` dostępne kontrole to:
+Po zainstalowaniu zależności backendu z `mcp/requirements.txt` oraz frontendu z `web/package.json` dodaj lokalne narzędzie deweloperskie Ruff (nie jest instalowane w obrazie aplikacji):
 
 ```bash
-python -m unittest discover -s tests -v
+mkdir -p .local/tmp/pip
+TMPDIR="$PWD/.local/tmp/pip" python3 -m pip install --only-binary=:all: --no-deps --target .local/tools/ruff --cache-dir .local/cache/pip -r requirements-dev.txt
+```
+
+Przed każdym commitem uruchom pełną kontrolę:
+
+```bash
+python3 scripts/check_project.py
+```
+
+Runner sprawdza kolejno Ruff, testy backendu, testy frontendu, build i zmiany Git (robocze oraz staged). Błąd lub brak narzędzia blokuje commit. Raporty pozostają w ignorowanym `.local/logs/checks/`; nie publikuj ich bez sprawdzenia. Nie wczytuje `.env` ani nie wykonuje rzeczywistych wyszukiwań. Agenci mają stałą zgodę na tę kontrolę zgodnie z AGENTS.md.
+
+Poszczególne kontrole można uruchomić osobno diagnostycznie:
+
+```bash
+PYTHONPATH=.local/tools/ruff python3 -m ruff check --config ruff.toml mcp scripts tests
+python3 -m unittest discover -s tests -v
 npm --prefix web test
 npm --prefix web run build
 git diff --check
 ```
 
-Repozytorium nie definiuje osobnego kompletnego zestawu lintingu, typechecka i skanowania bezpieczeństwa.
+Ruff sprawdza błędy Pythona i podstawowy styl; nie zastępuje testów, skanowania sekretów ani audytu bezpieczeństwa. Domyślna kontrola nie poprawia plików automatycznie. Instalacja narzędzia niesie zwykłe ryzyko zależności zewnętrznej; przypięta wersja i oddzielenie od aplikacji ograniczają zakres. `--fix`, formatowanie i szczególnie `--unsafe-fixes` mogą zmienić kod — zasady ich używania opisuje AGENTS.md.
 
 Do pracy nad frontendem służy `npm --prefix web run dev`. Serwer Vite przekazuje `/api` do backendu pod `http://127.0.0.1:8890`; backend musi być uruchomiony osobno.
 
 ## Dokumentacja
 
+- [Instrukcja integracji MCP Search dla agenta](docs/instrukcja-integracji-mcp-search.md) — start wdrożenia w aplikacji, aktualne adresy HTTP, sesja MCP i testy odbioru.
 - [MCP dla AI i integratorów](docs/MCP-USAGE.md) — kontrakt narzędzia, protokół, błędy i plan testu integracyjnego.
-- [Instrukcja integracji](docs/INSTRUKCJA.md) — przykłady klientów; zawiera także starsze ścieżki środowiska autora, które należy dostosować.
+- [Instrukcja integracji](docs/INSTRUKCJA.md) — codzienne operacje i przykłady konfiguracji klientów MCP.
 - [Stan projektu](STATUS.md) i [historia zmian](CHANGELOG.md).
 - [Zasady pracy agentów](AGENTS.md), [Git flow](GIT-FLOW.md) i [przekazanie sesji](HANDOFF.md).
+
+## Wersja i status wydania
+
+Ostatnie oznaczone wydanie to `0.1.0` (bieżące zmiany rozwojowe znajdują się w sekcji `[Unreleased]` w [CHANGELOG.md](CHANGELOG.md)). Oznaczenie stabilnego wydania `1.0.0` wymaga pozytywnego potwierdzenia testu integracji MCP przez aplikację kliencką WirralAI oraz zamknięcia kontroli wdrożeniowych opisanych w [STATUS.md](STATUS.md).
 
 Opis odpowiada kodowi w repozytorium. Nie stanowi potwierdzenia działania konkretnego wdrożenia ani integracji z wybranym klientem MCP.

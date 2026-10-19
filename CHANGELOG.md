@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Instrukcja integracji MCP Search dla agentów — 2026-10-18
+- Dodano docs/instrukcja-integracji-mcp-search.md: ustalone endpointy HTTP, integrację backendu i pętli narzędzia, trzy stany wyniku, sondę połączenia bez wyszukiwania oraz testy odbioru aplikacji.
+- Wskazano jeden punkt konfiguracji przyszłej domeny wyszukaj.dom i odróżniono test bezpłatny od rzeczywistego wyszukiwania z możliwym kosztem fallbacku.
+- Dodano odsyłacze z README, mapy repo i pozostałych instrukcji. Pozytywna opinia WirralAI pozostaje warunkiem stabilnego 1.0.0.
+- Weryfikacja: przykład klienta initialize/tools/list PASS na lokalnej usłudze (2025-11-25), składnia/JSON/odsyłacze PASS; Ruff, 46 testów backendu, 18 frontendu i build PASS. Bez rzeczywistego wyszukiwania.
+
+### Akceptacja MCP przed 1.0.0 — 2026-10-18
+- Zapisano warunek Mariusza: stabilne 1.0.0 wymaga pozytywnej opinii WirralAI po teście integracji MCP. Akceptacja pozostaje otwarta; testy serwera jej nie zastępują.
+
+### Q3 — Czytelne walidatory i obowiązkowy Ruff — 2026-10-18
+- Rozdzielono importy i wydzielono walidatory wyników Python/JS. Dodano przypięty Ruff 0.17.1 jako narzędzie wyłącznie deweloperskie.
+- Dodano scripts/check_project.py: Ruff, unittest, Vitest, build i kontrola diff roboczego/staged. Błąd lub brak narzędzia zatrzymuje kontrolę; trzy testy zabezpieczają ten przebieg.
+- Zapisano zatwierdzone przez Mariusza allow dla agentów i obowiązek kontroli przed commitem. Bez automatycznych poprawek i bez zmian zależności obrazu aplikacji.
+- Dodano raport zgodności MCP dla WirralAI w docs/contract/MCP-COMPATIBILITY.md.
+- Walidacja: Ruff PASS, backend 46/46, frontend 18/18, build i diff-check roboczy/staged PASS.
+
+### K1-UI — Stan pusty również w przeglądarce — 2026-10-18
+- Usunięto pozostałe utożsamienie source null z awarią w React. status empty wyświetla brak wyników bez alarmu. Test regresji zachowuje rozróżnienie starszych odpowiedzi bez statusu.
+- Walidacja: backend 43/43, frontend 18/18, build i diff-check PASS.
+
+### Q2 — Aktualny pusty szablon środowiska — 2026-10-18
+- Publiczny .env.example zawiera wszystkie zmienne README oraz wejścia MCP, wyłącznie puste wartości. Puste pola opcjonalne używają domyślnych ustawień zamiast psuć start przez int(""). Test szablonu i uruchomienia konfiguracji na syntetycznie pustym środowisku; prawdziwego .env nie odczytano.
+- Walidacja: backend 43/43, frontend 17/17, build i diff-check PASS.
+
+### S5 — Nieuprzywilejowany proces i stały obraz — 2026-10-18
+- Dockerfile deklaruje USER 10001:10001. SearXNG przypięto do oficjalnego manifestu Docker Hub sha256:8bdd9aa136b2dc3b9332cf24714fa34a375b8a1949a1201ec900c24d7378596e (publiczne metadane 2026-10-18). Test konfiguracji PASS. Runtime UID/build niepotwierdzone: brak dostępu do docker.sock; nie uruchamiano sudo ani wdrożenia.
+- Walidacja: backend 42/42, frontend 17/17, build i diff-check PASS.
+
+### K2 — Walidacja zapytań MCP — 2026-10-18
+- Narzędzie i jego schemat ograniczają query do 1–1000 znaków Unicode; białe znaki są odrzucane przed dostawcami. Testy sprawdzają puste/1001 znaków bez HTTP oraz akceptację 1000 polskich znaków. UI/API zachowuje udokumentowany limit 500.
+- Walidacja: backend 41/41, frontend 17/17, build i diff-check PASS.
+
+### K4 — Wspólne przykłady i testy transportu MCP — 2026-10-18
+- docs/contract/web_search.example.json zawiera syntetyczne ok/empty/error. Trzy testy pełnych sesji initialize → tools/list → tools/call porównują sparsowany blok tekstowy JSON ze wspólnym plikiem. Testy klienta WirralAI pozostają do uruchomienia po jego stronie.
+- Walidacja: backend 39/39, frontend 17/17, build i diff-check PASS.
+
+### K1 — Jednoznaczny wynik pusty i awaria — 2026-10-18
+- Dodano status ok/empty/error. Poprawny brak wyników ma source null, results [] i errors []; awaria bez wyników zawsze error. Udany fallback ma ok bez errors. API oddaje 502 przy awarii. Dokumentacja zawiera nowe stany i negocjację protokołu.
+- Walidacja: backend 36/36, frontend 17/17, build i diff-check PASS.
+
+### S4 — Bezpieczne kody błędów dostawców — 2026-10-18
+- Odpowiedź MCP zwraca kontrolowane kody timeout/http_error/error i lokalne no_key/limit. Testy podkładają wyjątki z prywatnym tekstem i sprawdzają brak ich treści w odpowiedzi.
+- Walidacja: backend 33/33, frontend 17/17, build i diff-check PASS.
+
+### K3 — Przypięcie MCP i negocjacja protokołu — 2026-10-18
+- Biblioteka mcp==1.30.0 w mcp/requirements.txt. Test rzeczywistego initialize potwierdza wszystkie cztery wersje akceptowane przez WirralAI; nieznana wersja negocjuje 2025-11-25.
+- Walidacja: backend 32/32, frontend 17/17, build i diff-check PASS.
+
+### S3 — Opcjonalna kontrola dostępu MCP — 2026-10-18
+- MCP_AUTH_TOKEN chroni /mcp i jego metody GET/POST/DELETE stałoczasowym porównaniem nagłówka Bearer. Dotyczy pełnej aplikacji i osobnego entrypointu MCP. Brak konfiguracji zachowuje poprzednie działanie; przeglądarkowe API i statyczne UI nie otrzymują ani nie wymagają tego sekretu. Smoke potrafi przekazać wartość z własnego środowiska wyłącznie do MCP.
+- Walidacja: backend 30/30, frontend 17/17, build i diff-check PASS.
+
+### Q1 — Atomowy limit prób Perplexity — 2026-10-18
+- Limit jest rezerwowany pod krótką blokadą przed żądaniem HTTP. Nie zwracamy rezerwacji po błędzie ani anulowaniu, bo koszt po stronie dostawcy może już powstać. Test 100 równoległych prób przy limicie 50 potwierdza dokładnie 50 żądań. Licznik nadal jest lokalny dla procesu i resetuje się po restarcie; nie deklarujemy trwałego budżetu.
+- Walidacja: backend 25/25, frontend 17/17, build i diff-check PASS.
+
+### S2 — Asynchroniczne wyszukiwanie — 2026-10-18
+- web_search i obaj dostawcy używają async/await oraz httpx.AsyncClient. Adapter API oczekuje na tę samą asynchroniczną usługę. Test sprawdza dwa opóźnienia po 1 s, wspólny czas poniżej 1,5 s oraz możliwość uruchomienia obu żądań przed ich zakończeniem.
+- Walidacja: backend 23/23, frontend 17/17, build i diff-check PASS.
+
+### S1 — Oddzielenie klucza od wersjonowanej konfiguracji — 2026-10-18
+- Compose montuje pusty publiczny szablon i wymaga lokalnego SEARXNG_SECRET. Dawny plik usunięto wyłącznie ze śledzenia, bez odczytu i zmiany lokalnej wartości. Rotacja klucza i rzeczywisty start pozostają do potwierdzenia przez operatora; stara historia nie została usunięta.
+- Walidacja: backend 22/22, frontend 17/17, build i diff-check PASS.
+
+### Doprecyzowanie Git Flow — 2026-10-17
+- Zapisano pełną kolejność zadania: gałąź z develop, testy i commit, lokalny merge, weryfikacja develop, oczekiwanie na zgodę, push wyłącznie develop i usunięcie lokalnej gałęzi po udanym pushu.
+- Dodano obowiązek zgłaszania sprzecznych poleceń oraz omówienia uzasadnienia przed świadomym zatwierdzeniem wyjątku.
+- Określono zakres fire: zgoda właściciela na pracę bezpośrednio na develop nie zastępuje zielonych testów, ochrony sekretów ani zgody na push. Bieżąca korekta otrzymała ten status od Mariusza.
+
+### Porządki Git — 2026-10-17
+- Uaktualniono HANDOFF i STATUS po lokalnym scaleniu całego search-ui i dokumentu audytu do develop.
+- Zachowano diagnostykę HTTP w ignorowanym katalogu lokalnym; nie jest częścią publikacji.
+- Zapisano oczekiwanie na zgodę na push develop oraz warunek usuwania lokalnych gałęzi dopiero po udanym pushu.
+
+### Dokumentacja narzędzi — 2026-10-17
+- Usunięto odniesienia do nieużywanego narzędzia środowiskowego i ujednolicono odwołania do bezpośrednich poleceń testów w README oraz REPO.
+- Zachowano wymóg zgody na Bash oraz zakazy odczytu i publikowania sekretów.
+
+### Zamknięcie sesji — 2026-10-17
+- Poprawki review wysłano na GitHub w commicie `d5336b6` (PR #1); bez merge i wdrożenia.
+- Zapisano ostateczną decyzję o zachowaniu obecnego wyglądu i świadomym nieprzyjęciu uwagi o kontraście.
+- Potwierdzono rzeczywiste wyszukiwanie MCP z hosta przez SearXNG; problem DNS klienta VirralAI w kontenerze pozostaje do zdiagnozowania.
+
 ### Poprawki code review — 2026-10-17
 - Ochrona Host niezależną listą `SEARCH_ALLOWED_HOSTS`; test odrzucenia zgodnych, ale obcych nagłówków Host/Origin i zachowania dostępu Docker.
 - Usunięto awarię renderowania wyniku z adresem `https://www./`.

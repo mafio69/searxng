@@ -1,26 +1,21 @@
-# HANDOFF.md — pałeczka między sesjami
+# HANDOFF.md — audyt 2026-10-17
 
-## Aktualne przekazanie — 2026-10-17
+Aktualizacja: 2026-10-18.
 
-- Poprawki PR #1: niezależna lista zaufanych hostów (TrustedHostMiddleware), brak awarii dla `https://www./`, fokus/trap klawiatury mobilnej historii i wyłączenie ukrytego panelu z interakcji/drzewa dostępności.
-- Mariusz zabronił zmian wyglądu: kolory, układ i typografia zachowane. Uwaga review o kontraście celowo pozostaje otwarta. CSS zmienia wyłącznie visibility zamkniętego panelu mobilnego.
-- `SEARCH_ALLOWED_HOSTS`: domyślnie `127.0.0.1,localhost,mcp-search`; własne IP/domeny wymagają jawnego wpisu. Nazwy bez portów, nie stosować wildcardu.
-- Kontrole po poprawkach: backend 20/20, frontend 17/17, build Vite, diff check i smoke nowego kodu na porcie 8891 — PASS. Testowy serwer zatrzymano. Kontenerów nie przebudowywano.
-- Zgoda Mariusza na commit i push poprawek review na `feat/search-ui`. Nie obejmuje wdrożenia.
-- `tests/http/server-diagnostic.http` pozostaje osobnym, niezacommitowanym plikiem z wcześniejszej diagnostyki PhpStorm; nie dodawać go do commita poprawek review.
+- NASTĘPNY AGENT: plan doprowadzenia do 1.0.0 bez nowych funkcji — docs/release-1.0.0-plan.md (blokery R1–R4, poprawki dokumentacji D1–D8, kontrola UI W1–W3, optymalizacje O1–O7 ze źródłami). Plik nie jest jeszcze w commicie. Bieżąca gałąź chore/secret-scan-and-s1-s5 zawiera cudze niezacommitowane zmiany — nie mieszać z zadaniami planu.
 
-## Poprzednie przekazanie — 2026-10-16
+- Dokumentacja integracji K4: docs/instrukcja-integracji-mcp-search.md jest punktem startowym dla agenta aplikacji. Zawiera ustalone adresy HTTP host/Docker, sesję MCP, przykład klienta 1.30.0, trzy stany i testy całej pętli model–narzędzie–UI. Domena wyszukaj.dom pozostaje planowana; nie wdrażano DNS/proxy. Bez nowych zależności, rzeczywistych wyszukiwań i zmian drugiego repozytorium.
+- Weryfikacja instrukcji: składnia przykładu Pythona, JSON zgodny ze wspólnymi fixtures i odsyłacze lokalne PASS. Dokładny przykład uruchomiono na lokalnym działającym MCP bez --live: initialize/tools/list PASS, protocol 2025-11-25. Pełne kontrole: Ruff, backend 46/46, frontend 18/18, build i diff-check PASS. Nie wykonano rzeczywistego wyszukiwania ani odbioru z WirralAI.
 
-- Mariusz określił obecny zakres jako **MVP 1.0**. Zadanie: stabilizacja bez nowych funkcji.
-- Gałąź `feat/search-ui`, zastane niezacommitowane zmiany zachowane. Zgoda Mariusza: agent sam wykonuje commit po zielonych kontrolach; push dopiero na osobne polecenie. Bez zmiany polityk.
-- Poprawiono odczyt historii zawierającej wpis `null`: pozostałe poprawne wpisy są zachowane.
-- Frontend i adapter HTTP odrzucają niepoprawną strukturę wyników: czytelny błąd UI / HTTP 502 zamiast awarii renderowania lub nieobsłużonego wyjątku.
-- Komunikat o braku frontendu odsyła do istniejącego README.
-- Testy: backend **17/17**, frontend **13/13**, build Vite i `git diff --check` — PASS. Testy obejmują także MCP tools/call z atrapą dostawcy, błędy odpowiedzi, ochronę cross-site i spóźnione odpowiedzi UI.
-- Smoke działających kontenerów na `http://127.0.0.1:8890` — PASS: frontend, zasoby, favicon, walidacja API, sesja MCP i tools/list. Test dotyczy dotychczasowego obrazu; najnowsze poprawki wymagają przebudowania.
-- Mariusz potwierdził działające wyszukiwanie screenem. W tej kontroli agent nie wykonywał rzeczywistych ani płatnych wyszukiwań.
-- Sieć `ai` i kontenery uruchomił Mariusz przez sudo. Agent nie ma dostępu do socketu Docker; nie zmieniać uprawnień systemowych. Przebudowanie po poprawkach: `sudo docker compose up -d --build`, następnie `python3 scripts/smoke_test.py`.
-- W tym repo nie używamy `dxrun` — decyzja Mariusza w rozmowie. Zależności testów lokalnie w `.local/python`; backend: `PYTHONPATH=.local/python python3 -m unittest discover -s tests -v`. TestClient wymagał uruchomienia poza sandboxem.
-- Starlette zgłasza ostrzeżenie deprecacji TestClient z HTTPX; testy przechodzą. Nie dodawano zależności ani nie zmieniano wersji w ramach stabilizacji.
-- Znane ograniczenia MVP: brak logowania, dostęp domyślnie przez loopback i sieć Docker `ai`, licznik Perplexity nietrwały i niesynchronizowany między równoległymi wywołaniami. Opis w README i docs/MCP-USAGE.md.
-- Integracja z docelowym klientem AI wymaga osobnej weryfikacji. Brak lokalnego `origin/develop`; nie wykonywano fetch ani zmian gałęzi podczas stabilizacji istniejącej pracy.
+- Pracujemy na docs/audyt-2026-10-17. Każdy punkt: testy → commit → lokalny merge do develop → powrót. Bez push i bez usuwania gałęzi.
+- Q3 zakończone w kodzie: rozdzielone importy, nazwane walidatory w Python/JS. Ruff 0.17.1 jest przypięty w requirements-dev.txt, zainstalowany wyłącznie w ignorowanym .local/tools/ruff i włączony do python3 scripts/check_project.py.
+- Mariusz zatwierdził instalację Ruff, stałe kontrole przed commitem i allow używania przez agentów. Zapis w AGENTS.md, bez zmiany opencode ani konfiguracji uprawnień. Domyślnie bez --fix; chronione ścieżki wykluczone.
+- Kontrole: Ruff PASS, backend 46/46, frontend 18/18, build i diff-check roboczy/staged PASS. Testy sprawdzają także zatrzymanie kontroli po błędzie lintingu i braku narzędzia. Brak rzeczywistych zapytań do wyszukiwarek.
+- Raport dla WirralAI: docs/contract/MCP-COMPATIBILITY.md. Biblioteka MCP 1.30.0; wszystkie cztery wersje initialize i trzy syntetyczne stany narzędzia potwierdzone testami pełnego transportu MCP.
+- Etapy kodu wykonane: S1–S5, K1–K4, Q1–Q3 (w tym uzupełnienie UI dla empty). Nie oznacza to zakończenia poniższych kontroli operatora/integracji.
+- S1: operator musi ustawić nowy SEARXNG_SECRET i potwierdzić start. Stary klucz pozostaje w historii Git; nie używać go. Nie czytano ani nie zmieniano rzeczywistego .env i wartości sekretów. Nie przepisano historii.
+- S5: runtime UID/build niepotwierdzone — brak dostępu do docker.sock. Obraz deklaruje UID 10001:10001; SearXNG ma stały digest. Nie uruchamiano sudo ani wdrożenia.
+- K1/K4: klient WirralAI musi wykonać własne testy wspólnego docs/contract/web_search.example.json; nie zmieniano drugiego repozytorium.
+- Warunek stabilnego wydania 1.0.0 ustalony przez Mariusza: wymagana jest pozytywna opinia projektu WirralAI po teście integracji MCP. Status: oczekujemy. Zielone testy searxng nie zastępują tej akceptacji; pozostałe kontrole wdrożenia nadal obowiązują.
+- Q1: licznik Perplexity jest atomowy tylko w jednym procesie, nietrwały; restart zeruje limit.
+- Lokalny dawny searxng-settings.yml pozostaje ignorowany, bez odczytu i modyfikacji. Diagnostyka HTTP w .local/tmp/http/. Nie czytać .local/secret/.

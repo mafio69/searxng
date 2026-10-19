@@ -3,7 +3,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "mcp"))
 
@@ -19,7 +19,7 @@ class WebAppTests(unittest.TestCase):
         isolated_mcp = patch("web_app.mcp", type(server.mcp)("search", host="0.0.0.0"))
         isolated_mcp.start()
         self.addCleanup(isolated_mcp.stop)
-        self.service = Mock(return_value=json.dumps({
+        self.service = AsyncMock(return_value=json.dumps({
             "source": "searxng", "results": [{"title": "Example", "url": "https://example.org", "snippet": "Text"}],
         }))
         self.client = TestClient(create_app(self.service, allowed_hosts=["testserver"]))
@@ -71,7 +71,8 @@ class WebAppTests(unittest.TestCase):
     def test_provider_details_are_not_exposed(self):
         self.service.return_value = json.dumps({"source": None, "results": [], "errors": ["private operational detail"]})
         response = self.client.post("/api/search", json={"query": "test"})
-        self.assertEqual(response.json(), {"source": None, "results": []})
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json(), {"error": "Search unavailable"})
         self.service.side_effect = RuntimeError("private operational detail")
         response = self.client.post("/api/search", json={"query": "test"})
         self.assertEqual(response.status_code, 502)
@@ -133,7 +134,7 @@ class SmokeTests(unittest.TestCase):
         self.addCleanup(replacement.stop)
 
     def test_full_smoke_flow_without_provider_calls(self):
-        service = Mock(side_effect=AssertionError("Smoke must not call providers"))
+        service = AsyncMock(side_effect=AssertionError("Smoke must not call providers"))
         root = Path(__file__).resolve().parents[1] / ".local" / "tmp"
         root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=root) as directory:
@@ -163,75 +164,78 @@ class SmokeTests(unittest.TestCase):
                     paid.assert_not_called()
 
 
-class SearchFallbackTests(unittest.TestCase):
+class SearchFallbackTests(unittest.IsolatedAsyncioTestCase):
     @patch.object(server, "_perplexity")
     @patch.object(server, "_searxng")
-    def test_success_never_calls_paid_fallback(self, searxng, perplexity):
+    async def test_success_never_calls_paid_fallback(self, searxng, perplexity):
         searxng.return_value = [{"url": "https://example.org"}]
-        result = json.loads(server.web_search("test", 100))
+        result = json.loads(await server.web_search("test", 100))
         self.assertEqual(result["source"], "searxng")
         searxng.assert_called_once_with("test", 10)
         perplexity.assert_not_called()
 
     @patch.object(server, "_perplexity", return_value=[])
     @patch.object(server, "_searxng", return_value=[])
-    def test_empty_primary_uses_fallback(self, searxng, perplexity):
-        self.assertEqual(json.loads(server.web_search("test"))["source"], "perplexity-fast")
+    async def test_empty_primary_uses_fallback(self, searxng, perplexity):
+        self.assertEqual(json.loads(await server.web_search("test")), {
+            "status": "empty", "source": None, "results": [], "errors": []})
         perplexity.assert_called_once_with("test", 5)
 
     @patch.object(server, "_perplexity", side_effect=RuntimeError("fallback unavailable"))
     @patch.object(server, "_searxng", side_effect=RuntimeError("primary unavailable"))
-    def test_both_failures_are_reported(self, searxng, perplexity):
-        result = json.loads(server.web_search("test"))
+    async def test_both_failures_are_reported(self, searxng, perplexity):
+        result = json.loads(await server.web_search("test"))
         self.assertIsNone(result["source"])
         self.assertEqual(result["results"], [])
         self.assertEqual(len(result["errors"]), 2)
 
 
-class ProviderTests(unittest.TestCase):
-    @patch.object(server.httpx, "get")
-    def test_searxng_limits_results_and_truncates_content(self, get):
+class ProviderTests(unittest.IsolatedAsyncioTestCase):
+    @patch.object(server.httpx.AsyncClient, "get", new_callable=AsyncMock)
+    async def test_searxng_limits_results_and_truncates_content(self, get):
+        get.return_value = Mock()
         get.return_value.json.return_value = {"results": [
             {"title": "A", "url": "https://example.org", "content": "x" * 500},
             {"title": "B", "content": None},
         ]}
-        result = server._searxng("query", 1)
+        result = await server._searxng("query", 1)
         self.assertEqual(len(result), 1)
         self.assertEqual(len(result[0]["snippet"]), 400)
         get.return_value.raise_for_status.assert_called_once()
         self.assertEqual(get.call_args.kwargs["params"]["format"], "json")
 
-    @patch.object(server.httpx, "post")
-    def test_missing_key_prevents_paid_request(self, post):
+    @patch.object(server.httpx.AsyncClient, "post", new_callable=AsyncMock)
+    async def test_missing_key_prevents_paid_request(self, post):
         with patch.object(server, "PPLX_KEY", ""):
-            with self.assertRaisesRegex(RuntimeError, "brak PPLX_API_KEY"):
-                server._perplexity("query", 1)
+            with self.assertRaisesRegex(RuntimeError, "perplexity_no_key"):
+                await server._perplexity("query", 1)
         post.assert_not_called()
 
-    @patch.object(server.httpx, "post")
-    def test_daily_limit_prevents_paid_request(self, post):
+    @patch.object(server.httpx.AsyncClient, "post", new_callable=AsyncMock)
+    async def test_daily_limit_prevents_paid_request(self, post):
         state = {"day": server.datetime.date.today().isoformat(), "count": 2}
         with patch.object(server, "PPLX_KEY", "test-placeholder"), patch.object(server, "PPLX_DAILY_LIMIT", 2), patch.object(server, "_pplx", state):
             with self.assertRaisesRegex(RuntimeError, "limit"):
-                server._perplexity("query", 1)
+                await server._perplexity("query", 1)
         post.assert_not_called()
 
-    @patch.object(server.httpx, "post")
-    def test_new_day_resets_limit_and_failed_http_is_not_counted(self, post):
+    @patch.object(server.httpx.AsyncClient, "post", new_callable=AsyncMock)
+    async def test_new_day_resets_limit_and_failed_http_keeps_its_reservation(self, post):
         state = {"day": "2000-01-01", "count": 100}
+        post.return_value = Mock()
         post.return_value.json.return_value = {"results": [{"snippet": "x" * 500}]}
         with patch.object(server, "PPLX_KEY", "test-placeholder"), patch.object(server, "_pplx", state):
-            self.assertEqual(len(server._perplexity("query", 1)[0]["snippet"]), 400)
+            self.assertEqual(len((await server._perplexity("query", 1))[0]["snippet"]), 400)
             self.assertEqual(state["count"], 1)
             post.return_value.raise_for_status.side_effect = RuntimeError("HTTP failure")
             with self.assertRaises(RuntimeError):
-                server._perplexity("query", 1)
-            self.assertEqual(state["count"], 1)
+                await server._perplexity("query", 1)
+            self.assertEqual(state["count"], 2)
 
     @patch.object(server, "_perplexity", return_value=[{"url": "https://example.org"}])
     @patch.object(server, "_searxng", side_effect=RuntimeError("primary unavailable"))
-    def test_primary_exception_uses_fallback_with_minimum_limit(self, searxng, perplexity):
-        result = json.loads(server.web_search("query", 0))
+    async def test_primary_exception_uses_fallback_with_minimum_limit(self, searxng, perplexity):
+        result = json.loads(await server.web_search("query", 0))
         self.assertEqual(result["source"], "perplexity-fast")
         perplexity.assert_called_once_with("query", 1)
 

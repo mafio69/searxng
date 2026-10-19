@@ -5,17 +5,34 @@ import os
 from pathlib import Path
 
 import uvicorn
-from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
+from access import McpAccessMiddleware
 from server import HOST, PORT, mcp, web_search
 
 
-def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
+def is_valid_result(result):
+    if not isinstance(result, dict):
+        return False
+    if result.get("source") not in ("searxng", "perplexity-fast", None):
+        return False
+    items = result.get("results")
+    if not isinstance(items, list):
+        return False
+    fields = ("title", "url", "snippet")
+    for item in items:
+        if not isinstance(item, dict):
+            return False
+        if any(item.get(field) is not None and not isinstance(item[field], str) for field in fields):
+            return False
+    return True
+
+
+def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, mcp_auth=None):
     assets = Path(static_dir) if static_dir else Path(__file__).resolve().parent / "static"
 
     async def search_endpoint(request: Request):
@@ -44,18 +61,16 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
                 or type(count) is not int or not 1 <= count <= 10):
             return JSONResponse({"error": "Invalid search arguments"}, status_code=400)
         try:
-            result = json.loads(await run_in_threadpool(search_service, query.strip(), count))
-            if (not isinstance(result, dict)
-                    or result.get("source") not in ("searxng", "perplexity-fast", None)
-                    or not isinstance(result.get("results"), list)
-                    or any(not isinstance(item, dict) or any(
-                        item.get(field) is not None and not isinstance(item[field], str)
-                        for field in ("title", "url", "snippet")) for item in result["results"])):
+            result = json.loads(await search_service(query.strip(), count))
+            if not is_valid_result(result):
                 raise ValueError("Invalid search result")
         except Exception:
             return JSONResponse({"error": "Search unavailable"}, status_code=502)
+        if result.get("status") == "error" or result.get("errors"):
+            return JSONResponse({"error": "Search unavailable"}, status_code=502)
         # Raw exception strings from providers can contain operational details.
-        return JSONResponse({"source": result.get("source"), "results": result.get("results", [])})
+        return JSONResponse({"status": result.get("status", "ok" if result["results"] else "empty"),
+                             "source": result.get("source"), "results": result.get("results", [])})
 
     async def index(request: Request):
         if not (assets / "index.html").is_file():
@@ -69,10 +84,12 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None):
 
     # Reuse FastMCP's application, including its existing session-manager lifespan.
     app = mcp.streamable_http_app()
+    app.add_middleware(McpAccessMiddleware, auth_value=(
+        os.getenv("MCP_AUTH_TOKEN", "") if mcp_auth is None else mcp_auth
+    ))
     trusted_hosts = allowed_hosts if allowed_hosts is not None else [
-        host.strip() for host in os.getenv(
-            "SEARCH_ALLOWED_HOSTS", "127.0.0.1,localhost,mcp-search"
-        ).split(",") if host.strip()
+        host.strip() for host in (os.getenv("SEARCH_ALLOWED_HOSTS")
+                                 or "127.0.0.1,localhost,mcp-search").split(",") if host.strip()
     ]
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts,
                        www_redirect=False)
