@@ -9,8 +9,8 @@ Aktualizacja: 2026-10-19.
   - `O2–O5` (`perf/searxng-and-compose-hardening`): jawne timeouty wychodzące SearXNG (`3.0` / `8.0` s), zawieszenie `SearxEngineTooManyRequests: 600` w `searxng-settings.example.yml`, `healthcheck` (`/healthz`) z `condition: service_healthy` oraz rotacja logów `json-file` w `docker-compose.yml`.
   - `W3` (`chore/w3-headers-and-release-status`): nagłówki `X-Content-Type-Options: nosniff` i `Referrer-Policy: no-referrer` dla odpowiedzi UI w `mcp/web_app.py`.
   - Poprawki review PR #2 (`fix/pr2-review-comments`): skanowanie zawartości indeksu Git (`git show :<path>`) oraz pełna walidacja pustego przypisania w szablonach `.env*` w `scripts/check_tracked_files.py`, nieprzekazywany przy przekierowaniach nagłówek `Authorization` (`add_unredirected_header`) w `scripts/smoke_test.py` oraz nieczuły na wielkość liter schemat `Bearer` (z zachowaniem stałoczasowego, czułego na wielkość liter porównania tokenu) w `mcp/access.py`.
-  - Domena i tytuł UI (`chore/szukaj-dom-branding-and-docs`): tytuł `<title>szukaj.dom</title>` w `web/index.html`, oznaczenie marki `szukaj.dom` w `web/src/App.jsx` oraz ujednolicenie nazwy domeny `szukaj.dom` w `REPO.md`, `STATUS.md` i `HANDOFF.md`.
-  - `R2` (S1): operator skonfigurował nowy `SEARXNG_SECRET` w lokalnym `.env` i potwierdził start kontenera `mcp-search`.
+  - Domena, nazwa repozytorium `szukaj` i nowe `README.md` (`chore/szukaj-dom-branding-and-docs`, `docs/repo-rename-szukaj-and-readme`): tytuł `<title>szukaj.dom</title>` w `web/index.html`, oznaczenie marki `szukaj.dom` w `web/src/App.jsx`, nazwa pakietu `szukaj-ui` w `web/package.json`, linki `mafio69/szukaj` w `CHANGELOG.md`, przebudowane `README.md` oraz ujednolicenie nazwy w `REPO.md`, `STATUS.md` i `HANDOFF.md`.
+  - `R2` (S1): operator skonfigurował nowy `SEARXNG_SECRET` w lokalnym `.env` i potwierdził start kontenera `mcp-search`; smoke test na `http://szukaj.dom` PASS (`R4`).
 - Kontrole: `python3 scripts/check_project.py` (Ruff, tracked-files, backend 53/53, frontend 18/18, build, diff, staged-diff) — wszystkie PASS.
 - Lokalne pliki polityki (`opencode.json`, `.opencode/`, `.mcp.json`) pozostawiono nietknięte poza commitami zgodnie z `AGENTS.md`.
 
@@ -24,6 +24,6 @@ Aktualizacja: 2026-10-19.
 - S1 (R2): nowy `SEARXNG_SECRET` ustawiony przez operatora, start potwierdzony. Stary klucz pozostaje w historii Git; nie używać go. Nie czytano ani nie zmieniano rzeczywistego .env i wartości sekretów.
 - S5: runtime UID/build niepotwierdzone — brak dostępu do docker.sock. Obraz deklaruje UID 10001:10001; SearXNG ma stały digest. Nie uruchamiano sudo ani wdrożenia.
 - K1/K4: klient WirralAI musi wykonać własne testy wspólnego docs/contract/web_search.example.json; nie zmieniano drugiego repozytorium.
-- Warunek stabilnego wydania 1.0.0 ustalony przez Mariusza: wymagana jest pozytywna opinia projektu WirralAI po teście integracji MCP. Status: oczekujemy. Zielone testy searxng nie zastępują tej akceptacji; pozostałe kontrole wdrożenia nadal obowiązują.
+- Warunek stabilnego wydania 1.0.0 ustalony przez Mariusza: wymagana jest pozytywna opinia projektu WirralAI po teście integracji MCP. Status: oczekujemy. Zielone testy repozytorium `szukaj` nie zastępują tej akceptacji; pozostałe kontrole wdrożenia nadal obowiązują.
 - Q1: licznik Perplexity jest atomowy tylko w jednym procesie, nietrwały; restart zeruje limit.
 - Lokalny dawny searxng-settings.yml pozostaje ignorowany, bez odczytu i modyfikacji. Diagnostyka HTTP w .local/tmp/http/. Nie czytać .local/secret/.

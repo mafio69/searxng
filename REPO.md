@@ -1,4 +1,4 @@
-# REPO.md — mapa techniczna
+# REPO.md — mapa techniczna (`szukaj`)
 
 ## Przeznaczenie i architektura
 
