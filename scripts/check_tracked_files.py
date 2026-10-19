@@ -23,7 +23,9 @@ CREDENTIAL_PATTERNS = (
     ),
     (
         "populated_env_secret",
-        re.compile(r"^(?:SEARXNG_SECRET|PPLX_API_KEY|MCP_AUTH_TOKEN)\s*=\s*(?!\$\{)[^\s#]+"),
+        re.compile(
+            r"(?:^|[\s'\"])(?:SEARXNG_SECRET|PPLX_API_KEY|MCP_AUTH_TOKEN|[A-Z0-9_]*(?:PASSWORD|PASSWD|PWD|SECRET|TOKEN|API_KEY))\s*=\s*(?!\$\{)[^\s#'\"]+"
+        ),
     ),
     (
         "populated_searxng_secret_key",

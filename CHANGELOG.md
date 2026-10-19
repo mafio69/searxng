@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Przygotowanie do wydania 1.0.0 (skaner sekretów, D1–D8, O1–O5, W3, PR #2) — 2026-10-19
-- Ustawiono tytuł strony `<title>szukaj.dom</title>` w `web/index.html`, markę `szukaj.dom` w `web/src/App.jsx` oraz ujednolicono nazwę domeny `szukaj.dom` w dokumentacji (`REPO.md`, `HANDOFF.md`, `STATUS.md`).
+- Zmieniono nazwę projektu/pakietu UI na `szukaj` (`szukaj-ui` w `web/package.json`, linki `mafio69/szukaj`), przebudowano prezentację `README.md`, ustawiono tytuł `<title>szukaj.dom</title>` w `web/index.html`, markę `szukaj.dom` w `web/src/App.jsx` oraz ujednolicono nazwę domeny `szukaj.dom` w dokumentacji (`REPO.md`, `HANDOFF.md`, `STATUS.md`).
 - Dodano skaner śledzonych plików i indeksu Git `scripts/check_tracked_files.py` do bramki `scripts/check_project.py` oraz usunięto `searxng.geany` ze śledzenia Git.
 - Ujednolicono dokumentację (`D1–D8`): poprawiono kontrakt i ścieżki w `docs/INSTRUKCJA.md`, listę zmiennych w `docs/MCP-USAGE.md`, sekcję statusu wydania w `README.md` oraz wersję `0.1.0` w `web/package.json` do chwili wydania `1.0.0`.
 - Zoptymalizowano klienta HTTP (`O1`): współdzielony `httpx.AsyncClient` na proces w `mcp/server.py` z zamykaniem w `lifespan` aplikacji (`mcp/web_app.py`).
@@ -128,9 +128,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-10-16
 
 ### Added
-- **MCP Search Server**: Python FastMCP server (`mcp/server.py`) providing the `web_search` tool with SearXNG querying and fallback to Perplexity API ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
-- **Docker Compose Stack**: Containerized deployment (`docker-compose.yml`) containing SearXNG and MCP search services attached to the external `ai` network ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
-- **SearXNG Engine Settings**: Configuration (`searxng-settings.yml`) with JSON API response format enabled and rate limiter disabled ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
-- **Project Documentation & AI Policies**: Core documentation (`README.md`, `REPO.md`, `docs/INSTRUKCJA.md`), environment configuration template (`.env.example`), AI agent policies (`AGENTS.md`, `GIT-FLOW.md`), and session tracking templates (`STATUS.md`, `HANDOFF.md`) ([7b00209](https://github.com/mafio69/searxng/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **MCP Search Server**: Python FastMCP server (`mcp/server.py`) providing the `web_search` tool with SearXNG querying and fallback to Perplexity API ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **Docker Compose Stack**: Containerized deployment (`docker-compose.yml`) containing SearXNG and MCP search services attached to the external `ai` network ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **SearXNG Engine Settings**: Configuration (`searxng-settings.yml`) with JSON API response format enabled and rate limiter disabled ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
+- **Project Documentation & AI Policies**: Core documentation (`README.md`, `REPO.md`, `docs/INSTRUKCJA.md`), environment configuration template (`.env.example`), AI agent policies (`AGENTS.md`, `GIT-FLOW.md`), and session tracking templates (`STATUS.md`, `HANDOFF.md`) ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
 
-[0.1.0]: https://github.com/mafio69/searxng/releases/tag/v0.1.0
+[0.1.0]: https://github.com/mafio69/szukaj/releases/tag/v0.1.0
