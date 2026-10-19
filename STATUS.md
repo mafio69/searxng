@@ -1,8 +1,10 @@
 # STATUS.md
 
-Aktualizacja: 2026-10-18.
+Aktualizacja: 2026-10-19.
 
-- Instrukcja dla agenta wdrażającego MCP Search: docs/instrukcja-integracji-mcp-search.md. Na teraz stałe adresy HTTP; wyszukaj.dom jest wyłącznie planowane. Dokumentacja obejmuje testy połączenia, kontraktu i odpowiedzi modelu w aplikacji.
+- Strona „Szukaj” działa w sieci domowej pod `http://szukaj.dom/` (Pi-hole `*.dom` → serwer, Traefik → `127.0.0.1:8000`, `SEARCH_ALLOWED_HOSTS` z `szukaj.dom`). Sprawdzone 2026-10-19: strona 200, `/api/search` 200 ze źródłem SearXNG. Dla MCP nadal stałe adresy HTTP.
+
+- Instrukcja dla agenta wdrażającego MCP Search: docs/instrukcja-integracji-mcp-search.md. Na teraz dla MCP stałe adresy HTTP; `szukaj.dom` działa dla strony WWW. Dokumentacja obejmuje testy połączenia, kontraktu i odpowiedzi modelu w aplikacji.
 - Przykład klienta z instrukcji sprawdzony bez wyszukiwania na działającej lokalnej usłudze: initialize/tools/list PASS, protokół 2025-11-25. Nie zastępuje to odbioru integracji przez WirralAI.
 
 - Stabilne 1.0.0 czeka na pozytywną opinię WirralAI o integracji MCP, zgodnie z decyzją Mariusza. Akceptacji jeszcze nie otrzymano; nadal wymagane są pozostałe otwarte kontrole wdrożenia.

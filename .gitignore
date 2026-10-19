@@ -6,6 +6,7 @@
 .env.*
 !.env.example
 !.env.dist
+.env.tmp
 !.env.test.example
 !.env.testing.example
 .env.keys
