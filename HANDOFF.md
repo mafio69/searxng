@@ -8,8 +8,9 @@ Aktualizacja: 2026-10-19.
   - `O1` (`perf/shared-httpx-client`): współdzielony `httpx.AsyncClient` na proces w `mcp/server.py` z zamykaniem w `lifespan` aplikacji (`mcp/web_app.py`) i testami w `tests/test_concurrency.py` oraz `tests/test_web_app.py`.
   - `O2–O5` (`perf/searxng-and-compose-hardening`): jawne timeouty wychodzące SearXNG (`3.0` / `8.0` s), zawieszenie `SearxEngineTooManyRequests: 600` w `searxng-settings.example.yml`, `healthcheck` (`/healthz`) z `condition: service_healthy` oraz rotacja logów `json-file` w `docker-compose.yml`.
   - `W3` (`chore/w3-headers-and-release-status`): nagłówki `X-Content-Type-Options: nosniff` i `Referrer-Policy: no-referrer` dla odpowiedzi UI w `mcp/web_app.py`.
+  - Poprawki review PR #2 (`fix/pr2-review-comments`): skanowanie zawartości indeksu Git (`git show :<path>`) oraz pełna walidacja pustego przypisania w szablonach `.env*` w `scripts/check_tracked_files.py`, nieprzekazywany przy przekierowaniach nagłówek `Authorization` (`add_unredirected_header`) w `scripts/smoke_test.py` oraz nieczuły na wielkość liter schemat `Bearer` (z zachowaniem stałoczasowego, czułego na wielkość liter porównania tokenu) w `mcp/access.py`.
   - `R2` (S1): operator skonfigurował nowy `SEARXNG_SECRET` w lokalnym `.env` i potwierdził start kontenera `mcp-search`.
-- Kontrole: `python3 scripts/check_project.py` (Ruff, tracked-files, backend 50/50, frontend 18/18, build, diff, staged-diff) — wszystkie PASS.
+- Kontrole: `python3 scripts/check_project.py` (Ruff, tracked-files, backend 53/53, frontend 18/18, build, diff, staged-diff) — wszystkie PASS.
 - Lokalne pliki polityki (`opencode.json`, `.opencode/`, `.mcp.json`) pozostawiono nietknięte poza commitami zgodnie z `AGENTS.md`.
 
 - Dokumentacja integracji K4: docs/instrukcja-integracji-mcp-search.md jest punktem startowym dla agenta aplikacji. Zawiera ustalone adresy HTTP host/Docker, sesję MCP, przykład klienta 1.30.0, trzy stany i testy całej pętli model–narzędzie–UI. Domena wyszukaj.dom pozostaje planowana; nie wdrażano DNS/proxy. Bez nowych zależności, rzeczywistych wyszukiwań i zmian drugiego repozytorium.

@@ -66,13 +66,16 @@ def is_skipped_policy_file(relative_path):
     return relative_path in SKIP_CONTENT_PATHS or relative_path.startswith(".opencode/")
 
 
+EMPTY_TEMPLATE_ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=$")
+
+
 def is_populated_template_line(relative_path, line):
     if relative_path not in ALLOWED_ENV_TEMPLATES:
         return False
     stripped = line.strip()
     if not stripped or stripped.startswith("#"):
         return False
-    return not stripped.endswith("=")
+    return not EMPTY_TEMPLATE_ASSIGNMENT.match(stripped)
 
 
 def scan_line(relative_path, line):
@@ -84,6 +87,33 @@ def scan_line(relative_path, line):
     return None
 
 
+def read_index_lines(root, relative_path):
+    if not (root / ".git").exists():
+        return None
+    result = subprocess.run(
+        ["git", "show", f":{relative_path}"],
+        cwd=root,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        errors="replace",
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout.splitlines()
+
+
+def scan_lines(relative_path, lines, findings, recorded):
+    for number, line in enumerate(lines, 1):
+        reason = scan_line(relative_path, line)
+        if reason:
+            entry = f"{relative_path}:{number}: {reason}"
+            if entry not in recorded:
+                findings.append(entry)
+                recorded.add(entry)
+
+
 def scan_tracked_files(root=ROOT, tracked_files=None):
     files = list_tracked_files(root) if tracked_files is None else tracked_files
     findings = []
@@ -93,14 +123,14 @@ def scan_tracked_files(root=ROOT, tracked_files=None):
             continue
         if is_skipped_policy_file(relative_path):
             continue
+        recorded = set()
         file_path = root / relative_path
-        if not file_path.is_file():
-            continue
-        lines = file_path.read_text(encoding="utf-8", errors="replace").splitlines()
-        for number, line in enumerate(lines, 1):
-            reason = scan_line(relative_path, line)
-            if reason:
-                findings.append(f"{relative_path}:{number}: {reason}")
+        if file_path.is_file():
+            lines = file_path.read_text(encoding="utf-8", errors="replace").splitlines()
+            scan_lines(relative_path, lines, findings, recorded)
+        staged_lines = read_index_lines(root, relative_path)
+        if staged_lines is not None:
+            scan_lines(relative_path, staged_lines, findings, recorded)
     return findings
 
 
