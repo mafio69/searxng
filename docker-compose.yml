@@ -1,5 +1,5 @@
 services:
-  searxng:
+  szukaj:
     # Official Docker Hub manifest, resolved 2026-10-18; update deliberately.
     image: searxng/searxng@sha256:8bdd9aa136b2dc3b9332cf24714fa34a375b8a1949a1201ec900c24d7378596e
     environment:
@@ -29,11 +29,11 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      - SEARXNG_URL=http://searxng:8080
+      - SEARXNG_URL=http://szukaj:8080
     ports:
       - "${SEARCH_BIND_ADDRESS:-127.0.0.1}:${SEARCH_PORT:-8890}:8000"
     depends_on:
-      searxng:
+      szukaj:
         condition: service_healthy
     logging:
       driver: "json-file"
