@@ -191,6 +191,9 @@ class SearchFallbackTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ProviderTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncTearDown(self):
+        await server.close_http_client()
+
     @patch.object(server.httpx.AsyncClient, "get", new_callable=AsyncMock)
     async def test_searxng_limits_results_and_truncates_content(self, get):
         get.return_value = Mock()

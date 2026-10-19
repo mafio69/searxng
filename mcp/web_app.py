@@ -1,5 +1,6 @@
 """Same-origin web UI and JSON adapter for the existing MCP search service."""
 
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -12,7 +13,7 @@ from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
 from access import McpAccessMiddleware
-from server import HOST, PORT, mcp, web_search
+from server import HOST, PORT, close_http_client, mcp, web_search
 
 
 def is_valid_result(result):
@@ -84,12 +85,23 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
 
     # Reuse FastMCP's application, including its existing session-manager lifespan.
     app = mcp.streamable_http_app()
+    mcp_lifespan = app.router.lifespan_context
+
+    @contextlib.asynccontextmanager
+    async def lifespan(application):
+        async with mcp_lifespan(application) as state:
+            try:
+                yield state
+            finally:
+                await close_http_client()
+
+    app.router.lifespan_context = lifespan
     app.add_middleware(McpAccessMiddleware, auth_value=(
         os.getenv("MCP_AUTH_TOKEN", "") if mcp_auth is None else mcp_auth
     ))
     trusted_hosts = allowed_hosts if allowed_hosts is not None else [
         host.strip() for host in (os.getenv("SEARCH_ALLOWED_HOSTS")
-                                 or "127.0.0.1,localhost,mcp-search").split(",") if host.strip()
+                                  or "127.0.0.1,localhost,mcp-search").split(",") if host.strip()
     ]
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts,
                        www_redirect=False)
