@@ -32,7 +32,7 @@ services:
     environment:
       - SEARXNG_URL=http://szukaj:8080
     volumes:
-      - ./.local/logs:/app/.local/logs
+      - search-logs:/app/.local/logs
     ports:
       - "${SEARCH_BIND_ADDRESS:-127.0.0.1}:${SEARCH_PORT:-8890}:8000"
     depends_on:
@@ -50,3 +50,6 @@ services:
 networks:
   ai:
     external: true
+
+volumes:
+  search-logs:
