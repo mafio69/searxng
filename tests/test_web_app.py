@@ -127,6 +127,79 @@ class WebAppTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn("serverInfo", response.text)
 
+    def test_dev_mode_exposes_diagnostic_detail_while_prod_shows_only_friendly_message(self):
+        from starlette.routing import Route
+
+        self.service.side_effect = RuntimeError("internal diagnostic trace")
+        dev_app = create_app(self.service, allowed_hosts=["testserver"], app_env="dev")
+        prod_app = create_app(self.service, allowed_hosts=["testserver"], app_env="prod")
+
+        def crash_route(request):
+            raise RuntimeError("provoked crash detail")
+
+        dev_app.router.routes.insert(0, Route("/crash", crash_route))
+        prod_app.router.routes.insert(0, Route("/crash", crash_route))
+
+        dev_client = TestClient(dev_app, raise_server_exceptions=False)
+        prod_client = TestClient(prod_app, raise_server_exceptions=False)
+
+        dev_api = dev_client.post("/api/search", json={"query": "test"})
+        self.assertEqual(dev_api.status_code, 502)
+        self.assertIn("internal diagnostic trace", dev_api.json().get("detail", ""))
+
+        prod_api = prod_client.post("/api/search", json={"query": "test"})
+        self.assertEqual(prod_api.status_code, 502)
+        self.assertNotIn("detail", prod_api.json())
+        self.assertNotIn("internal diagnostic trace", prod_api.text)
+
+        prod_html = prod_client.get("/crash", headers={"Accept": "text/html"})
+        self.assertEqual(prod_html.status_code, 500)
+        self.assertIn("Błąd. Przepraszamy", prod_html.text)
+        self.assertNotIn("provoked crash detail", prod_html.text)
+
+        dev_html = dev_client.get("/crash", headers={"Accept": "text/html"})
+        self.assertEqual(dev_html.status_code, 500)
+        self.assertIn("Błąd. Przepraszamy", dev_html.text)
+        self.assertIn("provoked crash detail", dev_html.text)
+
+    def test_logging_sensitivity_and_gzip_archive_rotation(self):
+        import gzip
+        import logging
+        from app_logging import configure_logging, resolve_log_level
+
+        self.assertEqual(resolve_log_level(None), logging.WARNING)
+        self.assertEqual(resolve_log_level("DEBUG"), logging.DEBUG)
+        self.assertEqual(resolve_log_level("info"), logging.INFO)
+
+        previous_disable = logging.root.manager.disable
+        logging.disable(logging.NOTSET)
+        self.addCleanup(logging.disable, previous_disable)
+
+        root = Path(__file__).resolve().parents[1] / ".local" / "tmp"
+        root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=root) as directory:
+            log_file = Path(directory) / "szukaj.log"
+            logger = configure_logging(
+                level_name="WARNING",
+                log_file=log_file,
+                max_bytes=220,
+                backup_count=2,
+            )
+            self.addCleanup(configure_logging)
+            logger.info("info message filtered out at warning level")
+            for idx in range(8):
+                logger.warning("warning event number %d with padding for rotation", idx)
+            logger.error("error event logged to file")
+
+            archives = sorted(Path(directory).glob("szukaj.log.*.gz"))
+            self.assertGreaterEqual(len(archives), 1)
+            self.assertLessEqual(len(archives), 2)
+            with gzip.open(archives[0], "rt", encoding="utf-8") as handle:
+                archived_text = handle.read()
+            self.assertIn("WARNING", archived_text)
+            current_text = log_file.read_text(encoding="utf-8")
+            self.assertNotIn("info message filtered out", current_text + archived_text)
+
 
 class SmokeTests(unittest.TestCase):
     def setUp(self):

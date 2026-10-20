@@ -8,6 +8,8 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
+from app_logging import get_logger
+
 SEARXNG_URL = os.getenv("SEARXNG_URL") or "http://searxng:8080"
 SEARXNG_LANG = os.getenv("SEARXNG_LANG") or "auto"
 PPLX_KEY = os.getenv("PPLX_API_KEY", "")
@@ -93,26 +95,39 @@ async def _perplexity(q: str, n: int) -> list[dict]:
 @mcp.tool()
 async def web_search(query: Annotated[str, Field(min_length=1, max_length=1000)], max_results: int = 5) -> str:
     """Wyszukaj w internecie. JSON: status ok/empty/error, source, results, errors."""
+    logger = get_logger()
     if not isinstance(query, str) or not query.strip() or len(query) > 1000:
+        logger.warning("Rejected invalid MCP web_search query")
         raise ValueError("query must contain 1–1000 characters")
     query = query.strip()
     n = max(1, min(max_results, 10))
+    logger.debug("Starting web_search (max_results=%d, query_len=%d)", n, len(query))
     errors = []
     try:
         res = await _searxng(query, n)
         if res:
+            logger.info("Search succeeded via searxng (%d results)", len(res))
             return json.dumps({"status": "ok", "source": "searxng", "results": res, "errors": []}, ensure_ascii=False)
     except Exception as e:
-        errors.append(_error_code("searxng", e))
+        code = _error_code("searxng", e)
+        errors.append(code)
+        logger.warning("Primary provider searxng failed: %s (%s)", code, type(e).__name__)
     try:
         res = await _perplexity(query, n)
         if res:
+            logger.info("Search succeeded via perplexity-fast (%d results)", len(res))
             return json.dumps({"status": "ok", "source": "perplexity-fast", "results": res, "errors": []}, ensure_ascii=False)
     except Exception as e:
         code = _error_code("perplexity", e)
         # An unconfigured optional fallback is disabled, not a failed search.
         if code != "perplexity_no_key" or errors:
             errors.append(code)
+        if code != "perplexity_no_key":
+            logger.warning("Fallback provider perplexity failed: %s (%s)", code, type(e).__name__)
+    if errors:
+        logger.error("Search failed for all providers: %s", ",".join(errors))
+    else:
+        logger.info("Search returned empty results")
     return json.dumps({"status": "error" if errors else "empty", "source": None,
                        "results": [], "errors": errors}, ensure_ascii=False)
 
