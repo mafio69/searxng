@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App.jsx';
 import ErrorBoundary from './ErrorBoundary.jsx';
-import { formatSearchError } from './api.js';
+import { formatSearchError, search } from './api.js';
 import { HISTORY_KEY, PRIVATE_KEY, readHistory, remember } from './storage.js';
 
 const response = { source: 'searxng', results: [{ title: 'Wynik testowy', url: 'https://example.org/test', snippet: 'Opis wyniku' }] };
@@ -23,6 +23,25 @@ async function submit(query = 'Pomorze') {
 }
 
 describe('search application', () => {
+  it('preserves cancellation while reading an error response', async () => {
+    const failure = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.reject(failure),
+    }));
+    await expect(search('query', 5)).rejects.toBe(failure);
+  });
+
+  it('preserves cancellation while reading a successful response', async () => {
+    const failure = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(failure),
+    }));
+    await expect(search('query', 5)).rejects.toBe(failure);
+  });
+
   it('renders successful empty status without a provider failure alert', async () => {
     fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'empty', source: null, results: [] }) });
     render(<App />); await submit();
