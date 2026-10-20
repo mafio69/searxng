@@ -13,7 +13,7 @@ beforeEach(() => {
   localStorage.clear();
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => response }));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 async function submit(query = 'Pomorze') {
   const user = userEvent.setup();
@@ -124,8 +124,14 @@ describe('search application', () => {
     const raw = new Error('debug stack detail');
     expect(formatSearchError(raw, 'prod')).not.toContain('debug stack detail');
     expect(formatSearchError(raw, 'dev')).toContain('debug stack detail');
+    vi.stubEnv('VITE_APP_ENV', 'dev');
+    expect(formatSearchError(raw)).toContain('debug stack detail');
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     function BrokenComponent() { throw new Error('render crash detail'); }
+    render(<ErrorBoundary appEnv={import.meta.env?.VITE_APP_ENV}><BrokenComponent /></ErrorBoundary>);
+    expect(screen.getByRole('alert').textContent).toContain('render crash detail');
+    cleanup();
+    vi.stubEnv('VITE_APP_ENV', 'prod');
     render(<ErrorBoundary appEnv="prod"><BrokenComponent /></ErrorBoundary>);
     expect(screen.getByRole('alert').textContent).toContain('Błąd. Przepraszamy');
     expect(screen.getByRole('alert').textContent).not.toContain('render crash detail');

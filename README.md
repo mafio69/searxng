@@ -63,7 +63,7 @@ Skopiuj szablon `.env.example` do `.env` i wygeneruj lokalnie własny klucz `SEA
 | `SEARXNG_URL` | Domyślnie `http://searxng:8080`; adres usługi SearXNG wewnątrz sieci Docker |
 | `MCP_HOST` | Domyślnie `0.0.0.0`; adres nasłuchiwania serwera wewnątrz kontenera |
 | `MCP_PORT` | Domyślnie `8000`; port nasłuchiwania serwera wewnątrz kontenera |
-| `APP_ENV` | Domyślnie `prod` (na stronie wyłącznie przyjazne komunikaty bez szczegółów technicznych); ustaw `dev`, aby wyświetlać szczegóły błędów do debugowania |
+| `APP_ENV` | Domyślnie `prod` (na stronie wyłącznie przyjazne komunikaty bez szczegółów technicznych); ustaw `dev`, aby wyświetlać szczegóły błędów do debugowania. Tryb UI jest przekazywany podczas budowania obrazu, więc po zmianie `APP_ENV` przebuduj usługę: `docker compose up -d --build` |
 | `LOG_LEVEL` | Domyślnie `WARNING` (loguje każde ostrzeżenie i błąd wzwyż); ustaw `INFO` lub `DEBUG` do szczegółowej diagnostyki |
 | `LOG_FILE` | Domyślnie `.local/logs/szukaj.log`; ścieżka pliku logu aplikacji |
 | `LOG_MAX_BYTES` | Domyślnie `5242880` (`5 MB`); maksymalny rozmiar pojedynczego pliku logu przed rotacją |

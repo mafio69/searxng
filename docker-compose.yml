@@ -26,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: mcp/Dockerfile
+      args:
+        VITE_APP_ENV: ${APP_ENV:-prod}
     container_name: mcp-search
     restart: unless-stopped
     env_file: .env
