@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "szukaj": {
+      "type": "http",
+      "url": "http://127.0.0.1:8890/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_AUTH_TOKEN:-}"
+      }
+    }
+  }
+}
