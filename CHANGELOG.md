@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Dwujęzyczna dokumentacja (angielskie README.md, polskie README_PL.md) — 2026-10-22
+- Przetłumaczono główny plik `README.md` na język angielski, zachowując pełną polską wersję dokumentacji w `README_PL.md` oraz dodano wzajemne odnośniki językowe.
+- Uporządkowano repozytorium po usunięciu tymczasowego pliku `tests/test_example_sample.py`.
+- Walidacja: Ruff PASS, tracked-files PASS, backend 55/55, frontend 19/19, build i diff-check roboczy/staged PASS.
+
 ### Systemowa obsługa błędów (`dev`/`prod`), rotacja logów `.gz`, Qodana i GitGuardian — 2026-10-20
 - Naprawiono ostrzeżenie Qodana `JSIgnoredPromiseFromCall` w `web/src/App.jsx` (`void runSearch(...)`).
 - Usunięto z `tests/test_checks.py` syntetyczny literał zgłaszany przez GitGuardian jako *Generic Password* oraz rozszerzono `scripts/check_tracked_files.py` o wykrywanie literałów `*_PASSWORD=`, `*_PASSWD=`, `*_PWD=`, `*_SECRET=`, `*_TOKEN=`, `*_API_KEY=` bezpośrednio w kodzie i testach.

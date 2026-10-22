@@ -1,6 +1,6 @@
 # HANDOFF.md — audyt 2026-10-17
 
-Aktualizacja: 2026-10-20.
+Aktualizacja: 2026-10-22.
 
 ## Przypomnienie na następną sesję (propozycje dla Mariusza — przypomnieć na starcie!)
 
