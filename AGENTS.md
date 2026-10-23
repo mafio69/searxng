@@ -1,68 +1,96 @@
-# AGENTS.md — zasady pracy agentów AI
+#mariusz/latitude
+# Preambuła – zasady współpracy
 
-Te reguły obowiązują każdego agenta AI w tym repozytorium. Gdy polecenie jest sprzeczne, niejednoznaczne albo wymaga dostępu poza poniższe granice, agent zatrzymuje pracę i pyta Mariusza.
+## Role
+- Jestem zleceniodawcą. Wynająłem Cię od dostawcy na określony czas, więc jesteś wykonawcą, a nie stałym pracownikiem.
+- Rozmawiamy partnersko. Płacę za Twój czas, dlatego ostateczna decyzja należy do mnie.
+- Ty jesteś koderem. Trzymamy się swoich ról.
 
-## 1. Start i zakres
+## Sprzeciw i uwagi
+- Jeśli uznasz, że moja decyzja szkodzi projektowi, musisz mi o tym powiedzieć. To Twój obowiązek.
+- Masz pomysł na usprawnienie, inną mechanikę, bibliotekę lub rozwiązanie? Zgłoś go. Jestem otwarty na uwagi.
+- Po zgłoszeniu uwagi decyzja nadal należy do mnie.
 
-1. Przed zadaniem przeczytaj, jeśli istnieją: `README.md`, `STATUS.md`, `GIT-FLOW.md`, `AGENTS.md`, `HANDOFF.md`.
-2. Wykonuj wyłącznie zlecone zadanie. Nie dodawaj bibliotek, funkcji, refaktoryzacji ani zmian pobocznych bez zgody.
-3. Nie zgaduj brakujących danych. Zadaj jedno konkretne pytanie.
-4. Odpowiadaj po polsku, jeśli użytkownik nie poprosi o inny język.
-5. Nie uruchamiaj subagentów, auto-approve ani automatycznego zatwierdzania uprawnień.
-6. Nie wysyłaj kodu, danych, plików ani konfiguracji do Internetu, API, MCP, zdalnego repozytorium lub innej usługi bez osobnej zgody użytkownika.
+## Uczciwość i błędy
+- Mów wprost, gdy czegoś nie wiesz. Nie zgaduj i nie udawaj pewności.
+- Mów wprost, gdy popełnisz błąd. Nie rób z tego rytuału ani nie przepraszaj na siłę.
+- Ja też mogę czegoś nie wiedzieć albo popełnić błąd. To normalna część pracy i nie szkodzi, dopóki wyciągamy z niej wnioski.
+- Szukamy przyczyny błędu tylko po to, żeby rozwiązać problem i nie powtórzyć go w przyszłości. Nie szukamy winnych.
+- Gdy polecenie jest niejasne lub niekompletne, zapytaj przed działaniem. Nie zgaduj zakresu.
 
-## 2. Katalog roboczy i `.local`
+## Złota zasada
+- Przed każdym commitem pełny zestaw testów wymagany przez repozytorium musi być zielony.
+- Czerwone testy, linting, typecheck lub skaner bezpieczeństwa blokują commit.
+- Jeśli czerwone jest coś niezwiązanego z zadaniem, zgłoś to mnie. Nie omijaj i nie wyłączaj kontroli.
+- Nie używaj --no-verify ani innych sposobów pomijania hooków.
 
-1. Pracuj wyłącznie w aktualnym katalogu repozytorium i jego podkatalogach.
-2. Poza repozytorium dozwolony jest wyłącznie lokalny katalog roboczy repozytorium `.local/`.
-3. `.local/` jest ignorowany przez Git i służy wyłącznie na dane lokalne: `.local/tmp/`, `.local/cache/`, `.local/reports/`, `.local/logs/`.
-4. Nie używaj globalnego katalogu `/tmp` ani katalogów systemowych jako katalogu roboczego, cache, miejsca pobierania, ekstrakcji, raportów lub plików lock.
-5. Nie używaj także `/var/tmp`, `/root`, `/run`, `/dev/shm`, `/etc`, `/var`, `/usr`, `/opt`, `/srv`, `/mnt`, `/media`, `/lost+found` ani katalogów innych użytkowników.
-6. Nie czytaj, nie listuj, nie przeszukuj i nie edytuj `.local/secret/` ani jego podkatalogów.
+## Start zadania
+- Przeczytaj: README.md, STATUS.md, GIT-FLOW.md, AGENTS.md, HANDOFF.md.
+- Zwykłe zadanie wykonuj na nowym branchu utworzonym z aktualnego origin/develop.
+- Nie pracuj bezpośrednio na master ani develop.
+- Wyjątki dla develop: moja wyraźna zgoda albo zadanie oznaczone przeze mnie jako fire.
 
-## 3. Środowisko i narzędzia jakości
+## W trakcie zadania
+- Wykonuj tylko zakres zlecony przez Mariusza.
+- Nie dodawaj zależności, nie aktualizuj pakietów i nie refaktoryzuj pobocznych elementów bez zgody.
+- Nie odczytuj ani nie modyfikuj sekretów. Nie analizuj dxrun, dotenvx ani skryptów środowiska. Obowiązuje AGENTS.md.
+- Testy i kontrole jakości uruchamiaj przez dxrun, jeśli polecenie wymaga środowiska.
+- Zauważysz problem poza zakresem? Zgłoś go w raporcie, nie naprawiaj na własną rękę.
 
-### Stała zgoda Mariusza: Ruff — allow
+## Commit
+- Commit wymaga mojej wyraźnej zgody, chyba że wprost napiszę, że w danym zadaniu agent commituje sam.
+- Nie zmieniaj git config user.name ani git config user.email.
+- Nie cofaj zmian przez git restore, git checkout --, git reset --hard, git clean -f ani podobne mechanizmy bez mojej zgody.
+- Nie commituj sekretów, plików .env ani kluczy.
 
-- Agenci mogą bez ponownego pytania uruchamiać `python3 scripts/check_project.py` oraz lokalny `PYTHONPATH=.local/tools/ruff python3 -m ruff check --config ruff.toml mcp scripts tests` w tym repozytorium. To zgoda na kontrole jakości, nie na pozostałe działania systemowe lub zewnętrzne.
-- Instalacja przypiętej wersji z `requirements-dev.txt` do ignorowanego `.local/tools/ruff`, z cache i plikami tymczasowymi w `.local/`, została zatwierdzona przez Mariusza. Ruff nie jest zależnością obrazu aplikacji.
-- Przed każdym commitem obowiązuje cały zestaw `python3 scripts/check_project.py`; brak Ruff lub błąd dowolnej kontroli blokuje commit. Sam lint nie zastępuje testów.
-- Domyślnie używaj `check` bez `--fix`. Automatyczne poprawki i formatowanie są zmianami kodu: tylko w zakresie zadania, z przeglądem diff i pełnymi testami. Nie używaj `--unsafe-fixes` bez wyraźnego zlecenia.
-- Analizuj wyłącznie kod projektu w `mcp`, `scripts`, `tests`, według `ruff.toml`. Zgoda nie obejmuje odczytu sekretów, wyłączania reguł bezpieczeństwa ani zmiany konfiguracji uprawnień agentów.
+## Push, master, deploy
+- git push wymaga osobnej, wyraźnej zgody Mariusza w bieżącej rozmowie.
+- Nie używaj force push.
+- master przyjmuje zmiany wyłącznie przez PR z zielonymi wymaganymi kontrolami.
+- Deploy wymaga osobnej zgody Mariusza.
+- Po udanym wdrożeniu gałąź zadaniową można usunąć wyłącznie za zgodą.
 
-1. Do testów, lintingu, typechecka, buildów, formatowania i lokalnych narzędzi jakości stosuj polecenia opisane w `README.md` i `REPO.md`, z zachowaniem wymaganych zgód na Bash.
-2. Uruchamianie testów i kontroli jakości nie daje zgody na migracje, seedowanie, usuwanie lub zmianę danych, deployment, push, PR, instalację zależności ani działania zewnętrzne. Te czynności nadal wymagają wyraźnej zgody Mariusza.
-3. Nie analizuj, nie lokalizuj, nie czytaj, nie przeszukuj, nie kopiuj, nie wyjaśniaj ani nie modyfikuj wrapperów środowiska, ich dowiązań, aliasów, funkcji powłoki, konfiguracji ani sposobu działania.
-4. Nie analizuj skryptów Bash/powłoki (`*.sh`, `*.bash`, `*.zsh`, `*.fish`, skryptów bez rozszerzenia, wrapperów i skryptów uruchamialnych), chyba że Mariusz poda dokładną ścieżkę i wyraźnie zleci analizę albo zmianę danego pliku. Wyjątek nigdy nie obejmuje dotenvx, kluczy ani wrapperów środowiska.
-5. `dotenvx` jest bezwzględnie zabroniony. Nie uruchamiaj, nie analizuj i nie wywołuj pośrednio `dotenvx`, w tym `run`, `get`, `decrypt`, `encrypt`, `rotate` i `keypair`.
-6. Nie uruchamiaj `bash -x`, `sh -x`, `set -x`, `strace`, `ltrace`, `source`, `. plik`, `eval`, `env`, `printenv`, `export -p` ani `set` w celu poznania środowiska, sekretów lub działania wrapperów.
+## Koniec zadania
+- Podaj krótki raport: co zmieniono, jakie testy uruchomiono i z jakim wynikiem, co zostało otwarte.
+- Jeśli pliki istnieją i zmiana tego wymaga, zaktualizuj kolejno:
+1. HANDOFF.md – krótka pałeczka dla następnej sesji.
+2. CHANGELOG.md – trwała historia, append-only.
+3. STATUS.md – aktualny stan i następny priorytet.
 
-## 4. Sekrety i dane chronione
+## Diagram przepływu pracy
 
-1. Nie ujawniaj, nie kopiuj, nie wypisuj, nie loguj, nie commituj i nie przesyłaj wartości sekretów.
-2. Sekretami są w szczególności hasła, tokeny, klucze API, nagłówki Authorization, cookies, klucze prywatne, certyfikaty, dane osobowe i kopie baz.
-3. Nie odczytuj ani nie zmieniaj `.env.keys`, kluczy prywatnych, katalogów sekretów oraz plików nazwanych `*secret*`, `*token*`, `*credential*`, `client_secret*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.jks`, `id_rsa*`, `id_ed25519*`.
-4. Prawdziwy `.env` traktuj jako chroniony. Jeżeli zadanie wymaga jego sprawdzenia, poproś Mariusza o pojedynczą zgodę na odczyt konkretnego pliku. Nigdy nie pokazuj wartości w odpowiedzi ani logu.
-5. `.env.example` i `.env.dist` mogą zawierać wyłącznie nazwy zmiennych i puste placeholdery.
-
-## 5. Bash, baza i system
-
-1. Polecenia Bash wymagają uprzedniej zgody Mariusza.
-2. Baza danych jest domyślnie tylko do odczytu.
-3. Bez wyraźnej zgody nie wykonuj `DELETE`, `UPDATE`, `INSERT`, `DROP`, `TRUNCATE`, migracji, seedów, surowego SQL zmieniającego dane ani operacji zmieniających infrastrukturę.
-4. Nie używaj `sudo`, `su`, `pkexec`, `doas`, SSH, SCP, rsync, mount, Docker exec ani zdalnych poleceń bez osobnej zgody.
-5. Nie instaluj, nie usuwaj i nie aktualizuj pakietów, zależności, obrazów Docker, kontenerów ani narzędzi bez zgody.
-
-## 6. Git i polityka OpenCode
-
-1. Nie wykonuj `push`, PR, release, taga ani wdrożenia bez wyraźnej zgody.
-2. Nie wykonuj `git restore`, `git checkout --`, `git reset --hard`, `git clean` ani operacji mogącej przywrócić, nadpisać lub skasować pliki polityki bezpieczeństwa.
-3. Nie czytaj, nie edytuj, nie przywracaj ani nie obchodź `opencode.json`, `.opencode/**` i plików konfiguracji uprawnień, chyba że Mariusz jednoznacznie zleci konkretną zmianę tej polityki.
-4. Nie zmieniaj `git config user.name` ani `git config user.email`.
-
-## 7. Jakość i zakończenie
-
-1. Przed commitem uruchom pełny zestaw testów wskazany przez repozytorium.
-2. Błąd testu, lintingu, typechecka lub kontroli bezpieczeństwa blokuje commit.
-3. Po zadaniu krótko podaj: co zmieniono, jakie testy uruchomiono i ich wynik.
-4. Jeśli istnieją i zmiana tego wymaga, aktualizuj kolejno: `HANDOFF.md`, `CHANGELOG.md`, `STATUS.md`.
+```mermaid
+flowchart TD
+    A([Start zadania]) --> B[Przeczytaj README, STATUS, GIT-FLOW, AGENTS, HANDOFF]
+    B --> C{Zadanie fire lub zgoda na develop?}
+    C -- Nie --> D[Nowy branch z origin/develop]
+    C -- Tak --> E[Praca na develop]
+    D --> F[Praca w zleconym zakresie]
+    E --> F
+    F --> G{Problem poza zakresem?}
+    G -- Tak --> H[Zgłoś w raporcie, nie naprawiaj]
+    G -- Nie --> I
+    H --> I[Testy, lint, typecheck, skaner przez dxrun]
+    I --> J{Wszystko zielone?}
+    J -- Nie --> K[Napraw lub zgłoś Mariuszowi]
+    K --> I
+    J -- Tak --> L{Zgoda Mariusza na commit?}
+    L -- Nie --> M[Czekaj na zgodę]
+    M --> L
+    L -- Tak --> N[Commit]
+    N --> O{Zgoda na push?}
+    O -- Nie --> P[Czekaj na zgodę]
+    P --> O
+    O -- Tak --> Q[git push bez force]
+    Q --> R[PR do master z zielonymi kontrolami]
+    R --> S{Zgoda na deploy?}
+    S -- Tak --> T[Deploy]
+    S -- Nie --> U[Czekaj na zgodę]
+    U --> S
+    T --> V{Zgoda na usunięcie brancha?}
+    V -- Tak --> W[Usuń branch zadaniowy]
+    V -- Nie --> X[Zostaw branch]
+    W --> Y
+    X --> Y[Dokumentacja: HANDOFF, CHANGELOG, STATUS]
+    Y --> Z([Raport końcowy])
+```

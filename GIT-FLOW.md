@@ -1,59 +1,96 @@
-# GIT-FLOW.md — zasady pracy Git
+#mariusz/latitude
+# Preambuła – zasady współpracy
+
+## Role
+- Jestem zleceniodawcą. Wynająłem Cię od dostawcy na określony czas, więc jesteś wykonawcą, a nie stałym pracownikiem.
+- Rozmawiamy partnersko. Płacę za Twój czas, dlatego ostateczna decyzja należy do mnie.
+- Ty jesteś koderem. Trzymamy się swoich ról.
+
+## Sprzeciw i uwagi
+- Jeśli uznasz, że moja decyzja szkodzi projektowi, musisz mi o tym powiedzieć. To Twój obowiązek.
+- Masz pomysł na usprawnienie, inną mechanikę, bibliotekę lub rozwiązanie? Zgłoś go. Jestem otwarty na uwagi.
+- Po zgłoszeniu uwagi decyzja nadal należy do mnie.
+
+## Uczciwość i błędy
+- Mów wprost, gdy czegoś nie wiesz. Nie zgaduj i nie udawaj pewności.
+- Mów wprost, gdy popełnisz błąd. Nie rób z tego rytuału ani nie przepraszaj na siłę.
+- Ja też mogę czegoś nie wiedzieć albo popełnić błąd. To normalna część pracy i nie szkodzi, dopóki wyciągamy z niej wnioski.
+- Szukamy przyczyny błędu tylko po to, żeby rozwiązać problem i nie powtórzyć go w przyszłości. Nie szukamy winnych.
+- Gdy polecenie jest niejasne lub niekompletne, zapytaj przed działaniem. Nie zgaduj zakresu.
 
 ## Złota zasada
+- Przed każdym commitem pełny zestaw testów wymagany przez repozytorium musi być zielony.
+- Czerwone testy, linting, typecheck lub skaner bezpieczeństwa blokują commit.
+- Jeśli czerwone jest coś niezwiązanego z zadaniem, zgłoś to mnie. Nie omijaj i nie wyłączaj kontroli.
+- Nie używaj --no-verify ani innych sposobów pomijania hooków.
 
-Przed każdym commitem pełny zestaw testów wymagany przez repozytorium musi być zielony. Czerwone testy, linting, typecheck lub skaner bezpieczeństwa blokują commit i push.
-
-Obowiązkowe polecenie przed commitem: `python3 scripts/check_project.py`. Obejmuje Ruff, testy backendu i frontendu, build oraz kontrolę zmian Git. Brak narzędzia lub niezerowy wynik blokuje commit. Stała zgoda na uruchamianie tej kontroli i Ruff jest zapisana w AGENTS.md.
-
-## Obowiązkowa kolejność zwykłego zadania
-
-1. Przeczytaj: README.md, REPO.md, STATUS.md, CHANGELOG.md, AGENTS.md i na końcu HANDOFF.md, jeśli istnieją.
-2. Zacznij od aktualnego lokalnego develop. Przed rozpoczęciem pracy sprawdź jego zgodność z origin/develop. Jeśli zdalny develop nie istnieje albo stan jest rozbieżny, zgłoś to Mariuszowi; nie wybieraj samodzielnie innej podstawy.
-3. Utwórz nową gałąź zadania z develop. Nie zaczynaj zadania z master ani ze starej gałęzi zadania.
-4. Wykonaj wyłącznie zlecone zadanie na tej gałęzi.
-5. Uruchom pełny wymagany zestaw testów i kontroli. Po zielonym wyniku wykonaj zatwierdzony commit na gałęzi zadania.
-6. Scal tę gałąź lokalnie do develop. Nie twórz dodatkowej gałęzi tylko po to, żeby pośrednio scalić gałąź wskazaną przez Mariusza. Konflikty rozwiąż bez utraty cudzej pracy.
-7. Zweryfikuj wynik scalenia na develop. Wszystkie wymagane kontrole muszą być zielone dla stanu przeznaczonego do wysłania; jeżeli scalenie zmieniło testowany stan, powtórz wymagane kontrole.
-8. Zatrzymaj się i czekaj na wyraźną zgodę Mariusza na push. Zgoda na zadanie, commit lub lokalny merge nie jest zgodą na push.
-9. Po uzyskaniu zgody wykonaj wyłącznie git push origin develop. Nie pushuj gałęzi zadania ani master.
-10. Dopiero po udanym pushu develop i potwierdzeniu, że obejmuje zmiany gałęzi zadania, usuń tę gałąź lokalnie bez wymuszania. Nie usuwaj jej przed pushem ani po nieudanym pushu. Nie czekaj z tym do wdrożenia.
-
-Zdalnych gałęzi nie usuwaj bez osobnej zgody. Lokalnego master nie używaj do pracy nad zadaniem; master przyjmuje zmiany wyłącznie przez PR na GitHub z zielonymi wymaganymi kontrolami. PR, jego scalenie i wdrożenie wymagają osobnej zgody.
-
-## Sprzeczne polecenia i wyjątki
-
-1. Gdy polecenie jest sprzeczne z tym flow, nie wykonuj sprzecznego kroku za pierwszym razem. Powiedz wprost: „Mariusz, to jest niezgodne z Git Flow”, wskaż konkretną zasadę i omów konsekwencje.
-2. Polemizuj, jeśli widzisz ryzyko lub błąd; nie przytakuj automatycznie. Poczekaj na dobry powód i świadome, jednoznaczne zatwierdzenie konkretnego wyjątku przez Mariusza.
-3. Wyjątek dotyczy tylko wskazanej czynności i zadania. Nie zmienia domyślnego flow na przyszłość. Uzasadnienie i zakres wyjątku zapisz w HANDOFF.md.
-4. Tylko Mariusz może nadać status fire. Jawne oznaczenie zadania jako fire lub świadoma zgoda Mariusza pozwala pracować i commitować bezpośrednio na develop, bez gałęzi zadania. Agent nie nadaje sobie tego statusu.
-5. Sam status fire nie znosi obowiązku zielonych testów, ochrony sekretów ani osobnej zgody na push. Odstępstwa od kontroli jakości wymagają odrębnej, wyraźnej decyzji Mariusza z uzasadnieniem.
+## Start zadania
+- Przeczytaj: README.md, STATUS.md, GIT-FLOW.md, AGENTS.md, HANDOFF.md.
+- Zwykłe zadanie wykonuj na nowym branchu utworzonym z aktualnego origin/develop.
+- Nie pracuj bezpośrednio na master ani develop.
+- Wyjątki dla develop: moja wyraźna zgoda albo zadanie oznaczone przeze mnie jako fire.
 
 ## W trakcie zadania
+- Wykonuj tylko zakres zlecony przez Mariusza.
+- Nie dodawaj zależności, nie aktualizuj pakietów i nie refaktoryzuj pobocznych elementów bez zgody.
+- Nie odczytuj ani nie modyfikuj sekretów. Nie analizuj dxrun, dotenvx ani skryptów środowiska. Obowiązuje AGENTS.md.
+- Testy i kontrole jakości uruchamiaj przez dxrun, jeśli polecenie wymaga środowiska.
+- Zauważysz problem poza zakresem? Zgłoś go w raporcie, nie naprawiaj na własną rękę.
 
-1. Wykonuj tylko zakres zlecony przez Mariusza.
-2. Nie dodawaj zależności, nie aktualizuj pakietów i nie refaktoryzuj pobocznych elementów bez zgody.
-3. Nie odczytuj ani nie modyfikuj sekretów oraz nie analizuj dotenvx i skryptów środowiska — obowiązuje AGENTS.md.
-4. Testy i kontrole jakości uruchamiaj poleceniami opisanymi w README.md i REPO.md, zgodnie z zasadami AGENTS.md.
-5. Sekrety, klucze API, tokeny, rzeczywiste pliki środowiska i prywatne dane nie mogą trafić do commitu ani na GitHub. Przed commitem i pushem sprawdź dokładny zakres publikowanych zmian bez ujawniania wartości sekretów. Nie używaj zbiorczego dodawania plików bez ich weryfikacji.
+## Commit
+- Commit wymaga mojej wyraźnej zgody, chyba że wprost napiszę, że w danym zadaniu agent commituje sam.
+- Nie zmieniaj git config user.name ani git config user.email.
+- Nie cofaj zmian przez git restore, git checkout --, git reset --hard, git clean -f ani podobne mechanizmy bez mojej zgody.
+- Nie commituj sekretów, plików .env ani kluczy.
 
-## Commit i ochrona pracy
+## Push, master, deploy
+- git push wymaga osobnej, wyraźnej zgody Mariusza w bieżącej rozmowie.
+- Nie używaj force push.
+- master przyjmuje zmiany wyłącznie przez PR z zielonymi wymaganymi kontrolami.
+- Deploy wymaga osobnej zgody Mariusza.
+- Po udanym wdrożeniu gałąź zadaniową można usunąć wyłącznie za zgodą.
 
-1. Nie commituj przy błędach testów lub kontroli jakości.
-2. Commit w zleconym zadaniu wykonuj samodzielnie po zielonych testach, chyba że Mariusz wyraźnie go wstrzyma. Nie pytaj o każdy commit ponownie.
-3. Nie zmieniaj git config user.name ani git config user.email.
-4. Nie przywracaj plików bezpieczeństwa przez git restore, git checkout --, git reset --hard ani podobne mechanizmy. Nie kasuj cudzych zmian, żeby uzyskać czyste drzewo robocze.
+## Koniec zadania
+- Podaj krótki raport: co zmieniono, jakie testy uruchomiono i z jakim wynikiem, co zostało otwarte.
+- Jeśli pliki istnieją i zmiana tego wymaga, zaktualizuj kolejno:
+1. HANDOFF.md – krótka pałeczka dla następnej sesji.
+2. CHANGELOG.md – trwała historia, append-only.
+3. STATUS.md – aktualny stan i następny priorytet.
 
-5. Podpisuj commit własną tożsamością i trailerem Co-Authored-By z nazwą używanego agenta/modelu oraz jego adresem noreply. Nie podszywaj się pod właściciela ani inny model.
+## Diagram przepływu pracy
 
-## Seria punktów jednego audytu
-
-Na wyraźne polecenie Mariusza bieżący audyt wykonujemy do końca na docs/audyt-2026-10-17. Każdy punkt osobno kończy się pełnymi testami, commitem i lokalnym scaleniem do develop, a następnie agent wraca na tę samą gałąź audytu do kolejnego punktu. Gałąź pozostaje do końca audytu; push nadal dotyczy tylko develop i czeka na osobne polecenie. To zatwierdzona organizacja etapów jednego zadania, nie zgoda na używanie starej gałęzi do nowego, niezwiązanego zadania.
-
-## Dokumentacja po zadaniu
-
-Jeżeli istnieją i zmiana tego wymaga, aktualizuj kolejno:
-
-1. HANDOFF.md — aktualny stan zadania, wynik kontroli, zgody i ewentualny wyjątek od flow.
-2. CHANGELOG.md — trwała historia, append-only.
-3. STATUS.md — aktualny stan i następny priorytet.
+```mermaid
+flowchart TD
+    A([Start zadania]) --> B[Przeczytaj README, STATUS, GIT-FLOW, AGENTS, HANDOFF]
+    B --> C{Zadanie fire lub zgoda na develop?}
+    C -- Nie --> D[Nowy branch z origin/develop]
+    C -- Tak --> E[Praca na develop]
+    D --> F[Praca w zleconym zakresie]
+    E --> F
+    F --> G{Problem poza zakresem?}
+    G -- Tak --> H[Zgłoś w raporcie, nie naprawiaj]
+    G -- Nie --> I
+    H --> I[Testy, lint, typecheck, skaner przez dxrun]
+    I --> J{Wszystko zielone?}
+    J -- Nie --> K[Napraw lub zgłoś Mariuszowi]
+    K --> I
+    J -- Tak --> L{Zgoda Mariusza na commit?}
+    L -- Nie --> M[Czekaj na zgodę]
+    M --> L
+    L -- Tak --> N[Commit]
+    N --> O{Zgoda na push?}
+    O -- Nie --> P[Czekaj na zgodę]
+    P --> O
+    O -- Tak --> Q[git push bez force]
+    Q --> R[PR do master z zielonymi kontrolami]
+    R --> S{Zgoda na deploy?}
+    S -- Tak --> T[Deploy]
+    S -- Nie --> U[Czekaj na zgodę]
+    U --> S
+    T --> V{Zgoda na usunięcie brancha?}
+    V -- Tak --> W[Usuń branch zadaniowy]
+    V -- Nie --> X[Zostaw branch]
+    W --> Y
+    X --> Y[Dokumentacja: HANDOFF, CHANGELOG, STATUS]
+    Y --> Z([Raport końcowy])
+```
