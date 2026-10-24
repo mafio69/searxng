@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-10-23
+## [1.0.0] - 2026-10-24
+
+### Weryfikacja MCP Streamable HTTP, testy PhpStorm i finalizacja wydania — 2026-10-24
+- Dodano zestaw testów integracyjnych w standardzie JetBrains HTTP Client ([http/mcp-test.http](file:///home/mariusz/PhpstormProjects/szukaj/http/mcp-test.http)) dla endpointu MCP Streamable HTTP (`/mcp`): negocjacja protokołu `initialize`, powiadomienie `notifications/initialized`, odkrywanie `tools/list`, wywołanie narzędzia `web_search` (w tym test zapytania *„Słuchawki do 500zł”* z logowaniem wyników), walidacja błędnych zapytań oraz test przeglądarkowego `/api/search`.
+- Skonfigurowano pliki środowiskowe klienta HTTP: `http/http-client.env.json`, szablon `http/http-client.private.env.json.example` oraz regułę w `.gitignore` chroniącą prywatne tokeny autoryzacyjne.
+- Rozwiązano problem botdetection SearXNG w kontenerze poprzez przekazywanie nagłówka `X-Forwarded-For: 127.0.0.1` w `mcp/server.py`.
+- Poprawiono moduł `mcp/app_logging.py` (`_resolve_root`), zapewniając prawidłowe tworzenie katalogu logów `/app/.local/logs` wewnątrz kontenera Docker.
+- Wyłączono nieaktywne silniki sieci Tor (`ahmia`, `torch`) w `searxng-settings.example.yml`.
+- Zaktualizowano `opencode.json` (poluzowanie uprawnień zgodnie z zasadą elastyczności konfiguracji).
+- Dodano skrypt narzędziowy `scripts/test_mcp_client.py` do testowania endpointu MCP z poziomu konsoli.
+- Wypchnięto gałąź `release/1.0.0` do `origin/release/1.0.0`.
 
 ### Wydanie stabilne 1.0.0 (Production Ready MVP) — 2026-10-23
 - Pierwsze stabilne wydanie produkcyjne (MVP 1.0.0) projektu `szukaj` (`szukaj.dom`).

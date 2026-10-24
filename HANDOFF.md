@@ -1,12 +1,22 @@
 # HANDOFF.md — stan projektu
 
-Aktualizacja: 2026-10-23.
+Aktualizacja: 2026-10-24.
 
-## Wydanie stabilne 1.0.0 (Production Ready MVP)
-- Wersja `1.0.0` ustalona i ujednolicona w całym repozytorium: `web/package.json`, `web/package-lock.json`, `CHANGELOG.md`, `README.md` oraz `README_PL.md`.
-- Główny plik `README.md` w języku angielskim pełni rolę wizytówki projektu na GitHubie, z polską dokumentacją w `README_PL.md`.
-- Pełna bramka jakościowa `python3 scripts/check_project.py` (Ruff, skaner śledzonych plików/sekretów, 55 testów Pythona, 19 testów Vitest, produkcyjny build Vite) w 100% zielona.
-- Zmiany przygotowane na gałęzi `release/1.0.0`, scalone do `develop` i wysłane na GitHub.
+## Stan bieżący: Wydanie 1.0.0 wypchnięte (origin/release/1.0.0)
+- Gałąź `release/1.0.0` zawiera sfinalizowane wydanie MVP 1.0.0 i została wypchnięta do `origin/release/1.0.0` (gotowa do PR do `master` lub scalenia do `develop`).
+- **MCP Streamable HTTP i integracja PhpStorm HTTP Client:**
+  - Utworzono [http/mcp-test.http](file:///home/mariusz/PhpstormProjects/szukaj/http/mcp-test.http) z 7 kompleksowymi testami obejmującymi pełen cykl MCP (`initialize`, `notifications/initialized`, `tools/list`, wywołania `web_search`, walidację błędów oraz przeglądarkowy `/api/search`).
+  - Dodano dedykowany test nr 5 dla zapytania *„Słuchawki do 500zł”* z weryfikacją i logowaniem wyników (`client.log`).
+  - Udokumentowano zachowanie klienta HTTP w PhpStorm: dla odpowiedzi strumieniowych SSE (`text/event-stream`) zakłada *Response* jest pusta, a strumień JSON-RPC wyświetla się w zakładce *Console*.
+  - Rozwiązano problem blokowania zapytań przez botdetection SearXNG w kontenerze poprzez nagłówek `X-Forwarded-For: 127.0.0.1` w [mcp/server.py](file:///home/mariusz/PhpstormProjects/szukaj/mcp/server.py).
+  - Poprawiono wykrywanie ścieżki bazowej dla logów w środowisku Docker `/app` w [mcp/app_logging.py](file:///home/mariusz/PhpstormProjects/szukaj/mcp/app_logging.py).
+  - Zaktualizowano plik `opencode.json` zgodnie z decyzją Mariusza (poluzowanie reguł narzędziowych).
+  - Dodano skrypt pomocniczy [scripts/test_mcp_client.py](file:///home/mariusz/PhpstormProjects/szukaj/scripts/test_mcp_client.py) do szybkiego testowania protokołu MCP z linii poleceń.
+- Pełna bramka jakościowa `python3 scripts/check_project.py` (Ruff, skaner śledzonych plików/sekretów, testy backendu, testy frontendu, produkcyjny build Vite, diff i staged-diff) w 100% zielona (PASS).
+
+## Następny priorytet
+1. Utworzenie Pull Requestu z `release/1.0.0` do `master` na GitHubie i wdrożenie produkcyjne po akceptacji Mariusza.
+2. Dalsze propozycje rozwojowe (1.1.0+): GitHub Actions CI, `GET /healthz` dla usługi `mcp-search`, odczyt `?q=` z paska przeglądarki, trwały dzienny licznik Perplexity.
 
 ## Propozycje na kolejne wydania (1.1.0+)
 1. **GitHub Actions CI (`.github/workflows/ci.yml`)**:
