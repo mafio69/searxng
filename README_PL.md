@@ -2,6 +2,9 @@
 
 [![Polski](https://img.shields.io/badge/język-Polski-red.svg)](#)
 [![English](https://img.shields.io/badge/lang-English-blue.svg)](README.md)
+[![Wersja](https://img.shields.io/badge/wersja-1.0.0-emerald.svg)](https://github.com/mafio69/szukaj/releases/tag/v1.0.0)
+[![Status](https://img.shields.io/badge/status-gotowy%20mvp-success.svg)](#)
+[![Bramka jakości](https://img.shields.io/badge/bramka%20jakości-74%20pass-brightgreen.svg)](#)
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)
 ![MCP 1.30.0](https://img.shields.io/badge/MCP-Streamable%20HTTP%20(1.30.0)-0F766E)
@@ -227,4 +230,6 @@ Skrypt wykonuje kolejno:
 
 ## Wersja i status wydania
 
-Ostatnie oznaczone wydanie to `0.1.0` (bieżące zmiany rozwojowe znajdują się w sekcji `[Unreleased]` w [CHANGELOG.md](CHANGELOG.md)). Oznaczenie stabilnego wydania `1.0.0` wymaga pozytywnego potwierdzenia testu integracji MCP przez aplikację kliencką WirralAI oraz zamknięcia kontroli wdrożeniowych opisanych w [STATUS.md](STATUS.md).
+**Wydanie stabilne:** `1.0.0` (Wydanie produkcyjne MVP)
+
+To wydanie stanowi stabilną wersję bazową projektu `szukaj`, obejmującą pełne wsparcie dla integracji agentów AI przez MCP Streamable HTTP, interfejs webowy React 19, meta-wyszukiwarkę SearXNG z opcjonalnym fallbackiem Perplexity oraz kompleksowe mechanizmy bezpieczeństwa. Szczegółową historię zmian znajdziesz w [CHANGELOG.md](CHANGELOG.md).

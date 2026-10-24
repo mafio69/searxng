@@ -5,6 +5,7 @@ import html
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import uvicorn
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -80,15 +81,25 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
     assets = Path(static_dir) if static_dir else Path(__file__).resolve().parent / "static"
     dev_mode = is_dev_env(app_env)
     logger = get_logger()
+    trusted_hosts = allowed_hosts if allowed_hosts is not None else [
+        host.strip() for host in (os.getenv("SEARCH_ALLOWED_HOSTS")
+                                  or "127.0.0.1,localhost,mcp-search").split(",") if host.strip()
+    ]
 
     async def search_endpoint(request: Request):
         # Do not accept cross-origin form submissions or send provider errors to browsers.
         if request.headers.get("content-type", "").split(";")[0].strip() != "application/json":
             return _reject_search(logger, "JSON required", 415)
         origin = request.headers.get("origin")
-        if origin and origin != f"{request.url.scheme}://{request.url.netloc}":
-            return _reject_search(logger, "Origin not allowed", 403)
-        if request.headers.get("sec-fetch-site") == "cross-site":
+        if origin:
+            origin_host = urlsplit(origin).hostname
+            is_same_origin = origin == f"{request.url.scheme}://{request.url.netloc}"
+            is_trusted = origin_host in trusted_hosts or origin_host == request.url.hostname
+            if not (is_same_origin or is_trusted):
+                return _reject_search(logger, "Origin not allowed", 403)
+            if request.headers.get("sec-fetch-site") == "cross-site" and not is_trusted:
+                return _reject_search(logger, "Origin not allowed", 403)
+        elif request.headers.get("sec-fetch-site") == "cross-site":
             return _reject_search(logger, "Origin not allowed", 403)
         body = bytearray()
         async for chunk in request.stream():
@@ -165,10 +176,6 @@ def create_app(search_service=web_search, static_dir=None, allowed_hosts=None, m
     app.add_middleware(McpAccessMiddleware, auth_value=(
         os.getenv("MCP_AUTH_TOKEN", "") if mcp_auth is None else mcp_auth
     ))
-    trusted_hosts = allowed_hosts if allowed_hosts is not None else [
-        host.strip() for host in (os.getenv("SEARCH_ALLOWED_HOSTS")
-                                  or "127.0.0.1,localhost,mcp-search").split(",") if host.strip()
-    ]
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts,
                        www_redirect=False)
     app.router.routes[0:0] = [

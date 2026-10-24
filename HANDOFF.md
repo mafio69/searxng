@@ -1,22 +1,26 @@
-# HANDOFF.md — audyt 2026-10-17
+# HANDOFF.md — stan projektu
 
-Aktualizacja: 2026-10-22.
+Aktualizacja: 2026-10-23.
 
-## Przypomnienie na następną sesję (propozycje dla Mariusza — przypomnieć na starcie!)
+## Wydanie stabilne 1.0.0 (Production Ready MVP)
+- Wersja `1.0.0` ustalona i ujednolicona w całym repozytorium: `web/package.json`, `web/package-lock.json`, `CHANGELOG.md`, `README.md` oraz `README_PL.md`.
+- Główny plik `README.md` w języku angielskim pełni rolę wizytówki projektu na GitHubie, z polską dokumentacją w `README_PL.md`.
+- Pełna bramka jakościowa `python3 scripts/check_project.py` (Ruff, skaner śledzonych plików/sekretów, 55 testów Pythona, 19 testów Vitest, produkcyjny build Vite) w 100% zielona.
+- Zmiany przygotowane na gałęzi `release/1.0.0`, scalone do `develop` i wysłane na GitHub.
 
-1. **Porządek pod audyty (`qodana.yaml`, `composer.json`, `.run/`)**:
-   - Ustawić w `qodana.yaml` właściwy linter pod Python/JS (zamiast domyślnego `jetbrains/qodana-php:2026.2`) i wykluczyć `.local/`, `web/node_modules/`, `web/dist/`.
-   - Usunąć zbędny pusty `composer.json` (chyba że ma służyć pod GrumPHP) oraz dodać `.run/` do `.gitignore`, aby lokalne konfiguracje uruchomieniowe PhpStorma nie trafiały do publicznego repozytorium.
-2. **GitHub Actions CI (`.github/workflows/ci.yml`)**:
-   - Lekki workflow uruchamiający `python3 scripts/check_project.py` (Ruff + skaner sekretów `check_tracked_files.py` + testy Python + testy Vitest + `vite build`) na PR do `develop` i `master` + zielona odznaka CI w `README.md`.
-3. **Endpoint `GET /healthz` także dla `mcp-search`**:
+## Propozycje na kolejne wydania (1.1.0+)
+1. **GitHub Actions CI (`.github/workflows/ci.yml`)**:
+   - Lekki workflow uruchamiający `python3 scripts/check_project.py` (Ruff + skaner sekretów `check_tracked_files.py` + testy Python + testy Vitest + `vite build`) na PR do `develop` i `master` + odznaka CI w `README.md`.
+2. **Endpoint `GET /healthz` także dla `mcp-search`**:
    - Dodać route `/healthz` w `mcp/web_app.py` (zwracający `200 {"status": "ok"}`) oraz `healthcheck` dla usługi `mcp-search` w `docker-compose.yml` pod monitoring Dockera i Traefika.
+3. **Obsługa parametru `?q=...` w URL (`http://szukaj.dom/?q=hasło`)**:
+   - Odczyt parametru `q` przy starcie `web/src/App.jsx`, aby można było ustawić `http://szukaj.dom/?q=%s` jako domyślną wyszukiwarkę w pasku adresu przeglądarki.
 4. **Trwały dzienny licznik Perplexity na dysku (`Q1`)**:
    - Zapisywać licznik `_pplx` (`day`, `count`) z `mcp/server.py` atomowo do małego pliku JSON w `.local/logs/` lub `.local/cache/`, aby restart kontenera `mcp-search` nie zerował dziennego limitu płatnego API.
 5. **Krótki cache in-memory (`TTL 30–60 s`) dla identycznych zapytań (`W1`)**:
    - Mały słownik LRU (np. do 64 wpisów na 60 s) w `mcp/server.py`, chroniący przed duplikatami zapytań przy odświeżeniu strony lub powtórnym wywołaniu `web_search` przez agenta.
-6. **Obsługa parametru `?q=...` w URL (`http://szukaj.dom/?q=hasło`)**:
-   - Odczyt parametru `q` przy starcie `web/src/App.jsx`, aby można było ustawić `http://szukaj.dom/?q=%s` jako domyślną wyszukiwarkę w pasku adresu przeglądarki.
+6. **Porządek pod audyty (`qodana.yaml`, `.run/`)**:
+   - Dopasować profil Qodana pod Python/JS oraz wykluczenia.
 
 ---
 

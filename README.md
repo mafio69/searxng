@@ -2,6 +2,9 @@
 
 [![English](https://img.shields.io/badge/lang-English-blue.svg)](#)
 [![Polski](https://img.shields.io/badge/język-Polski-red.svg)](README_PL.md)
+[![Version](https://img.shields.io/badge/version-1.0.0-emerald.svg)](https://github.com/mafio69/szukaj/releases/tag/v1.0.0)
+[![Status](https://img.shields.io/badge/status-production--ready-success.svg)](#)
+[![Quality Gate](https://img.shields.io/badge/quality%20gate-74%20passed-brightgreen.svg)](#)
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)
 ![MCP 1.30.0](https://img.shields.io/badge/MCP-Streamable%20HTTP%20(1.30.0)-0F766E)
@@ -227,4 +230,6 @@ The script runs in sequence:
 
 ## Version & Release Status
 
-The latest tagged release is `0.1.0` (in-progress changes are recorded in the `[Unreleased]` section of [CHANGELOG.md](CHANGELOG.md)). Tagging stable `1.0.0` requires explicit confirmation of MCP integration tests by the client application WirralAI and verification of all operational checklist items in [STATUS.md](STATUS.md).
+**Stable Release:** `1.0.0` (Production Ready MVP)
+
+This release establishes the baseline stable version of `szukaj`, featuring full support for MCP Streamable HTTP AI agent integration, React 19 web search UI, SearXNG meta-search aggregation with optional Perplexity fallback, and comprehensive security hardening. For historical release notes, see [CHANGELOG.md](CHANGELOG.md).

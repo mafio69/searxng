@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  server: { proxy: { '/api': 'http://127.0.0.1:8890' } },
+  server: {
+    proxy: {
+      '/api': process.env.SEARCH_TARGET || `http://127.0.0.1:${process.env.SEARCH_PORT || 8000}`,
+    },
+  },
   test: { environment: 'jsdom', restoreMocks: true },
 });

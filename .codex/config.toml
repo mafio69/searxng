@@ -1,3 +1,6 @@
-[mcp_servers.szukaj]
-url = "http://127.0.0.1:8890/mcp"
-bearer_token_env_var = "MCP_AUTH_TOKEN"
+  [mcp_servers.szukaj]
+    url = "http://127.0.0.1:8890/mcp"
+    bearer_token_env_var = "MCP_AUTH_TOKEN"
+
+  [mcp_servers.phpstorm]
+    url = "http://127.0.0.1:64442/stream"

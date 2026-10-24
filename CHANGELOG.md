@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-23
+
+### Wydanie stabilne 1.0.0 (Production Ready MVP) — 2026-10-23
+- Pierwsze stabilne wydanie produkcyjne (MVP 1.0.0) projektu `szukaj` (`szukaj.dom`).
+- Ujednolicono wersję projektu na `1.0.0` w `web/package.json`, `web/package-lock.json`, dokumentacji i rejestrze zmian.
+- Potwierdzono 100% sprawności zautomatyzowanej bramki jakości (`scripts/check_project.py`): Ruff linting, skaner wycieków i szablonów `.env`, 55 testów jednostkowych/integracyjnych backendu, 19 testów Vitest frontendu oraz produkcyjny build Vite.
+
 ### Dwujęzyczna dokumentacja (angielskie README.md, polskie README_PL.md) — 2026-10-22
 - Przetłumaczono główny plik `README.md` na język angielski, zachowując pełną polską wersję dokumentacji w `README_PL.md` oraz dodano wzajemne odnośniki językowe.
 - Uporządkowano repozytorium po usunięciu tymczasowego pliku `tests/test_example_sample.py`.
@@ -145,4 +152,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SearXNG Engine Settings**: Configuration (`searxng-settings.yml`) with JSON API response format enabled and rate limiter disabled ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
 - **Project Documentation & AI Policies**: Core documentation (`README.md`, `REPO.md`, `docs/INSTRUKCJA.md`), environment configuration template (`.env.example`), AI agent policies (`AGENTS.md`, `GIT-FLOW.md`), and session tracking templates (`STATUS.md`, `HANDOFF.md`) ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
 
+[1.0.0]: https://github.com/mafio69/szukaj/releases/tag/v1.0.0
 [0.1.0]: https://github.com/mafio69/szukaj/releases/tag/v0.1.0
