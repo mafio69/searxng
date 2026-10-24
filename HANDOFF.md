@@ -1,22 +1,36 @@
-# HANDOFF.md — audyt 2026-10-17
+# HANDOFF.md — stan projektu
 
-Aktualizacja: 2026-10-20.
+Aktualizacja: 2026-10-24.
 
-## Przypomnienie na następną sesję (propozycje dla Mariusza — przypomnieć na starcie!)
+## Stan bieżący: Wydanie 1.0.0 wypchnięte (origin/release/1.0.0)
+- Gałąź `release/1.0.0` zawiera sfinalizowane wydanie MVP 1.0.0 i została wypchnięta do `origin/release/1.0.0` (gotowa do PR do `master` lub scalenia do `develop`).
+- **MCP Streamable HTTP i integracja PhpStorm HTTP Client:**
+  - Utworzono [http/mcp-test.http](file:///home/mariusz/PhpstormProjects/szukaj/http/mcp-test.http) z 7 kompleksowymi testami obejmującymi pełen cykl MCP (`initialize`, `notifications/initialized`, `tools/list`, wywołania `web_search`, walidację błędów oraz przeglądarkowy `/api/search`).
+  - Dodano dedykowany test nr 5 dla zapytania *„Słuchawki do 500zł”* z weryfikacją i logowaniem wyników (`client.log`).
+  - Udokumentowano zachowanie klienta HTTP w PhpStorm: dla odpowiedzi strumieniowych SSE (`text/event-stream`) zakłada *Response* jest pusta, a strumień JSON-RPC wyświetla się w zakładce *Console*.
+  - Rozwiązano problem blokowania zapytań przez botdetection SearXNG w kontenerze poprzez nagłówek `X-Forwarded-For: 127.0.0.1` w [mcp/server.py](file:///home/mariusz/PhpstormProjects/szukaj/mcp/server.py).
+  - Poprawiono wykrywanie ścieżki bazowej dla logów w środowisku Docker `/app` w [mcp/app_logging.py](file:///home/mariusz/PhpstormProjects/szukaj/mcp/app_logging.py).
+  - Zaktualizowano plik `opencode.json` zgodnie z decyzją Mariusza (poluzowanie reguł narzędziowych).
+  - Dodano skrypt pomocniczy [scripts/test_mcp_client.py](file:///home/mariusz/PhpstormProjects/szukaj/scripts/test_mcp_client.py) do szybkiego testowania protokołu MCP z linii poleceń.
+- Pełna bramka jakościowa `python3 scripts/check_project.py` (Ruff, skaner śledzonych plików/sekretów, testy backendu, testy frontendu, produkcyjny build Vite, diff i staged-diff) w 100% zielona (PASS).
 
-1. **Porządek pod audyty (`qodana.yaml`, `composer.json`, `.run/`)**:
-   - Ustawić w `qodana.yaml` właściwy linter pod Python/JS (zamiast domyślnego `jetbrains/qodana-php:2026.2`) i wykluczyć `.local/`, `web/node_modules/`, `web/dist/`.
-   - Usunąć zbędny pusty `composer.json` (chyba że ma służyć pod GrumPHP) oraz dodać `.run/` do `.gitignore`, aby lokalne konfiguracje uruchomieniowe PhpStorma nie trafiały do publicznego repozytorium.
-2. **GitHub Actions CI (`.github/workflows/ci.yml`)**:
-   - Lekki workflow uruchamiający `python3 scripts/check_project.py` (Ruff + skaner sekretów `check_tracked_files.py` + testy Python + testy Vitest + `vite build`) na PR do `develop` i `master` + zielona odznaka CI w `README.md`.
-3. **Endpoint `GET /healthz` także dla `mcp-search`**:
+## Następny priorytet
+1. Utworzenie Pull Requestu z `release/1.0.0` do `master` na GitHubie i wdrożenie produkcyjne po akceptacji Mariusza.
+2. Dalsze propozycje rozwojowe (1.1.0+): GitHub Actions CI, `GET /healthz` dla usługi `mcp-search`, odczyt `?q=` z paska przeglądarki, trwały dzienny licznik Perplexity.
+
+## Propozycje na kolejne wydania (1.1.0+)
+1. **GitHub Actions CI (`.github/workflows/ci.yml`)**:
+   - Lekki workflow uruchamiający `python3 scripts/check_project.py` (Ruff + skaner sekretów `check_tracked_files.py` + testy Python + testy Vitest + `vite build`) na PR do `develop` i `master` + odznaka CI w `README.md`.
+2. **Endpoint `GET /healthz` także dla `mcp-search`**:
    - Dodać route `/healthz` w `mcp/web_app.py` (zwracający `200 {"status": "ok"}`) oraz `healthcheck` dla usługi `mcp-search` w `docker-compose.yml` pod monitoring Dockera i Traefika.
+3. **Obsługa parametru `?q=...` w URL (`http://szukaj.dom/?q=hasło`)**:
+   - Odczyt parametru `q` przy starcie `web/src/App.jsx`, aby można było ustawić `http://szukaj.dom/?q=%s` jako domyślną wyszukiwarkę w pasku adresu przeglądarki.
 4. **Trwały dzienny licznik Perplexity na dysku (`Q1`)**:
    - Zapisywać licznik `_pplx` (`day`, `count`) z `mcp/server.py` atomowo do małego pliku JSON w `.local/logs/` lub `.local/cache/`, aby restart kontenera `mcp-search` nie zerował dziennego limitu płatnego API.
 5. **Krótki cache in-memory (`TTL 30–60 s`) dla identycznych zapytań (`W1`)**:
    - Mały słownik LRU (np. do 64 wpisów na 60 s) w `mcp/server.py`, chroniący przed duplikatami zapytań przy odświeżeniu strony lub powtórnym wywołaniu `web_search` przez agenta.
-6. **Obsługa parametru `?q=...` w URL (`http://szukaj.dom/?q=hasło`)**:
-   - Odczyt parametru `q` przy starcie `web/src/App.jsx`, aby można było ustawić `http://szukaj.dom/?q=%s` jako domyślną wyszukiwarkę w pasku adresu przeglądarki.
+6. **Porządek pod audyty (`qodana.yaml`, `.run/`)**:
+   - Dopasować profil Qodana pod Python/JS oraz wykluczenia.
 
 ---
 

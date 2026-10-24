@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-24
+
+### Weryfikacja MCP Streamable HTTP, testy PhpStorm i finalizacja wydania — 2026-10-24
+- Dodano zestaw testów integracyjnych w standardzie JetBrains HTTP Client ([http/mcp-test.http](file:///home/mariusz/PhpstormProjects/szukaj/http/mcp-test.http)) dla endpointu MCP Streamable HTTP (`/mcp`): negocjacja protokołu `initialize`, powiadomienie `notifications/initialized`, odkrywanie `tools/list`, wywołanie narzędzia `web_search` (w tym test zapytania *„Słuchawki do 500zł”* z logowaniem wyników), walidacja błędnych zapytań oraz test przeglądarkowego `/api/search`.
+- Skonfigurowano pliki środowiskowe klienta HTTP: `http/http-client.env.json`, szablon `http/http-client.private.env.json.example` oraz regułę w `.gitignore` chroniącą prywatne tokeny autoryzacyjne.
+- Rozwiązano problem botdetection SearXNG w kontenerze poprzez przekazywanie nagłówka `X-Forwarded-For: 127.0.0.1` w `mcp/server.py`.
+- Poprawiono moduł `mcp/app_logging.py` (`_resolve_root`), zapewniając prawidłowe tworzenie katalogu logów `/app/.local/logs` wewnątrz kontenera Docker.
+- Wyłączono nieaktywne silniki sieci Tor (`ahmia`, `torch`) w `searxng-settings.example.yml`.
+- Zaktualizowano `opencode.json` (poluzowanie uprawnień zgodnie z zasadą elastyczności konfiguracji).
+- Dodano skrypt narzędziowy `scripts/test_mcp_client.py` do testowania endpointu MCP z poziomu konsoli.
+- Wypchnięto gałąź `release/1.0.0` do `origin/release/1.0.0`.
+
+### Wydanie stabilne 1.0.0 (Production Ready MVP) — 2026-10-23
+- Pierwsze stabilne wydanie produkcyjne (MVP 1.0.0) projektu `szukaj` (`szukaj.dom`).
+- Ujednolicono wersję projektu na `1.0.0` w `web/package.json`, `web/package-lock.json`, dokumentacji i rejestrze zmian.
+- Potwierdzono 100% sprawności zautomatyzowanej bramki jakości (`scripts/check_project.py`): Ruff linting, skaner wycieków i szablonów `.env`, 55 testów jednostkowych/integracyjnych backendu, 19 testów Vitest frontendu oraz produkcyjny build Vite.
+
+### Dwujęzyczna dokumentacja (angielskie README.md, polskie README_PL.md) — 2026-10-22
+- Przetłumaczono główny plik `README.md` na język angielski, zachowując pełną polską wersję dokumentacji w `README_PL.md` oraz dodano wzajemne odnośniki językowe.
+- Uporządkowano repozytorium po usunięciu tymczasowego pliku `tests/test_example_sample.py`.
+- Walidacja: Ruff PASS, tracked-files PASS, backend 55/55, frontend 19/19, build i diff-check roboczy/staged PASS.
+
 ### Systemowa obsługa błędów (`dev`/`prod`), rotacja logów `.gz`, Qodana i GitGuardian — 2026-10-20
 - Naprawiono ostrzeżenie Qodana `JSIgnoredPromiseFromCall` w `web/src/App.jsx` (`void runSearch(...)`).
 - Usunięto z `tests/test_checks.py` syntetyczny literał zgłaszany przez GitGuardian jako *Generic Password* oraz rozszerzono `scripts/check_tracked_files.py` o wykrywanie literałów `*_PASSWORD=`, `*_PASSWD=`, `*_PWD=`, `*_SECRET=`, `*_TOKEN=`, `*_API_KEY=` bezpośrednio w kodzie i testach.
@@ -140,4 +162,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SearXNG Engine Settings**: Configuration (`searxng-settings.yml`) with JSON API response format enabled and rate limiter disabled ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
 - **Project Documentation & AI Policies**: Core documentation (`README.md`, `REPO.md`, `docs/INSTRUKCJA.md`), environment configuration template (`.env.example`), AI agent policies (`AGENTS.md`, `GIT-FLOW.md`), and session tracking templates (`STATUS.md`, `HANDOFF.md`) ([7b00209](https://github.com/mafio69/szukaj/commit/7b00209d03ff680ab7bb48f857f290297b08b065)).
 
+[1.0.0]: https://github.com/mafio69/szukaj/releases/tag/v1.0.0
 [0.1.0]: https://github.com/mafio69/szukaj/releases/tag/v0.1.0

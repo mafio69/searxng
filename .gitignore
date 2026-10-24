@@ -13,6 +13,10 @@
 .env.keys.*
 *.env.keys
 
+# PhpStorm HTTP Client - prywatne zmienne i sekrety
+*.private.env.json
+!*.private.env.json.example
+
 # Klucze i certyfikaty
 *.pem
 *.key

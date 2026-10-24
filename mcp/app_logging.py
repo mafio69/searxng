@@ -8,7 +8,14 @@ from pathlib import Path
 import shutil
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
+def _resolve_root() -> Path:
+    current = Path(__file__).resolve()
+    if current.parent.name == "mcp":
+        return current.parents[1]
+    return current.parent
+
+
+ROOT = _resolve_root()
 DEFAULT_LOG_FILE = ROOT / ".local" / "logs" / "szukaj.log"
 DEFAULT_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_BACKUP_COUNT = 5

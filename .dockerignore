@@ -3,6 +3,7 @@
 !mcp/server.py
 !mcp/web_app.py
 !mcp/access.py
+!mcp/app_logging.py
 !mcp/requirements.txt
 !web/
 !web/package.json
@@ -13,3 +14,4 @@
 !web/src/**
 !web/public/
 !web/public/**
+/qodana.yaml

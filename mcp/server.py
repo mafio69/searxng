@@ -55,6 +55,7 @@ async def _searxng(q: str, n: int) -> list[dict]:
     r = await get_http_client().get(
         f"{SEARXNG_URL}/search",
         params={"q": q, "format": "json", "language": SEARXNG_LANG},
+        headers={"X-Forwarded-For": "127.0.0.1"},
         timeout=10,
     )
     r.raise_for_status()

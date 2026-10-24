@@ -1,0 +1,304 @@
+### Testy MCP Streamable HTTP (szukaj.dom)
+# Zmienne środowiskowe pobierane są automatycznie z:
+# - http/http-client.env.json (baseUrl, domyślne mcpSessionId)
+# - http/http-client.private.env.json (authToken)
+# Wybierz środowisko w pasku PhpStorma u góry edytora: 'Run with: local' lub 'szukaj-dom'
+
+###
+### 1. MCP Initialize (negocjacja protokołu i nawiązanie sesji)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: {{authToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "phpstorm-mcp-tester",
+      "version": "1.0.0"
+    }
+  }
+}
+
+> {%
+var sessionId = "";
+try {
+    sessionId = response.headers.valueOf("mcp-session-id") || response.headers.valueOf("Mcp-Session-Id");
+    if (!sessionId && response.headers.values) {
+        var vals = response.headers.values("mcp-session-id") || response.headers.values("Mcp-Session-Id");
+        if (vals && vals.length > 0) sessionId = vals[0];
+    }
+} catch (e) {}
+if (sessionId) {
+    client.global.set("mcpSessionId", sessionId);
+}
+
+client.test("MCP Initialize zwraca 200 i deklaruje mcp-session-id", function () {
+    client.assert(response.status === 200, "Oczekiwano HTTP 200, otrzymano: " + response.status);
+    client.assert(sessionId && sessionId.length > 0, "Brak nagłówka mcp-session-id w odpowiedzi");
+});
+
+if (typeof response.body === "string" && response.body.length > 0) {
+    client.test("MCP Initialize deklaruje serwer i protokół", function () {
+        var lines = response.body.split("\n");
+        var payload = null;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.indexOf("data:") === 0) {
+                try { payload = JSON.parse(line.substring(5).trim()); break; } catch (e) {}
+            }
+        }
+        if (!payload) {
+            try { payload = JSON.parse(response.body); } catch (e) {}
+        }
+        if (payload && payload.result) {
+            client.assert(payload.result.serverInfo !== undefined, "Brak serverInfo");
+            client.assert(payload.result.protocolVersion === "2025-11-25", "Nieprawidłowa wersja protokołu: " + payload.result.protocolVersion);
+        }
+    });
+}
+%}
+
+###
+### 2. MCP Initialized Notification
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{mcpSessionId}}
+Authorization: {{authToken}}
+
+{
+  "jsonrpc": "2.0",
+  "method": "notifications/initialized",
+  "params": {}
+}
+
+> {%
+client.test("MCP Initialized Notification przyjęte (200 lub 202)", function () {
+    client.assert(response.status === 200 || response.status === 202, "Oczekiwano HTTP 200/202, otrzymano: " + response.status);
+});
+%}
+
+###
+### 3. MCP Tools List (odkrywanie narzędzi - weryfikacja istnienia web_search)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{mcpSessionId}}
+Authorization: {{authToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list",
+  "params": {}
+}
+
+> {%
+client.test("MCP Tools List zwraca status 200", function () {
+    client.assert(response.status === 200, "Oczekiwano HTTP 200, otrzymano: " + response.status);
+});
+
+if (typeof response.body === "string" && response.body.length > 0) {
+    client.test("MCP Tools List zwraca narzędzie web_search z wymaganym schematem", function () {
+        var lines = response.body.split("\n");
+        var payload = null;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.indexOf("data:") === 0) {
+                try { payload = JSON.parse(line.substring(5).trim()); break; } catch (e) {}
+            }
+        }
+        if (!payload) {
+            try { payload = JSON.parse(response.body); } catch (e) {}
+        }
+        if (payload && payload.result) {
+            var tools = payload.result.tools || [];
+            var webSearch = tools.find(function(t) { return t.name === "web_search"; });
+            client.assert(webSearch !== undefined, "Serwer MCP nie udostępnia narzędzia web_search");
+            client.assert(webSearch.inputSchema?.properties?.query !== undefined, "Narzędzie web_search nie ma parametru query");
+        }
+    });
+}
+%}
+
+###
+### 4. MCP Tools Call: web_search (wywołanie wyszukiwania przez AI)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{mcpSessionId}}
+Authorization: {{authToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "web_search",
+    "arguments": {
+      "query": "SearXNG meta search engine",
+      "max_results": 3
+    }
+  }
+}
+
+> {%
+client.test("MCP Tools Call zwraca status 200", function () {
+    client.assert(response.status === 200, "Oczekiwano HTTP 200, otrzymano: " + response.status);
+});
+
+if (typeof response.body === "string" && response.body.length > 0) {
+    client.test("MCP Tools Call wykonuje web_search i zwraca wyniki", function () {
+        var lines = response.body.split("\n");
+        var payload = null;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.indexOf("data:") === 0) {
+                try { payload = JSON.parse(line.substring(5).trim()); break; } catch (e) {}
+            }
+        }
+        if (!payload) {
+            try { payload = JSON.parse(response.body); } catch (e) {}
+        }
+        if (payload && payload.result) {
+            client.assert(payload.result.isError !== true, "Narzędzie zgłosiło błąd wykonania");
+            var content = payload.result.content || [];
+            var textBlock = content.find(function(c) { return c.type === "text"; });
+            client.assert(textBlock !== undefined, "Brak bloku tekstowego z odpowiedzią");
+            if (textBlock && textBlock.text) {
+                var parsed = JSON.parse(textBlock.text);
+                client.assert(["ok", "empty", "error"].includes(parsed.status), "Nieprawidłowy status wyniku: " + parsed.status);
+                client.assert(Array.isArray(parsed.results), "Pole results nie jest tablicą");
+            }
+        }
+    });
+}
+%}
+
+###
+### 5. MCP Tools Call: web_search - "Słuchawki do 500zł"
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{mcpSessionId}}
+Authorization: {{authToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "web_search",
+    "arguments": {
+      "query": "Słuchawki do 500zł",
+      "max_results": 5
+    }
+  }
+}
+
+> {%
+client.test("MCP Tools Call zwraca status 200 dla 'Słuchawki do 500zł'", function () {
+    client.assert(response.status === 200, "Oczekiwano HTTP 200, otrzymano: " + response.status);
+});
+
+if (typeof response.body === "string" && response.body.length > 0) {
+    client.test("MCP Tools Call zwraca listę wyników", function () {
+        var lines = response.body.split("\n");
+        var payload = null;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.indexOf("data:") === 0) {
+                try { payload = JSON.parse(line.substring(5).trim()); break; } catch (e) {}
+            }
+        }
+        if (!payload) {
+            try { payload = JSON.parse(response.body); } catch (e) {}
+        }
+        if (payload && payload.result) {
+            client.assert(payload.result.isError !== true, "Narzędzie zgłosiło błąd");
+            var content = payload.result.content || [];
+            var textBlock = content.find(function(c) { return c.type === "text"; });
+            client.assert(textBlock !== undefined, "Brak bloku tekstowego z odpowiedzią");
+            if (textBlock && textBlock.text) {
+                var parsed = JSON.parse(textBlock.text);
+                client.assert(parsed.status === "ok", "Oczekiwano statusu ok, otrzymano: " + parsed.status);
+                client.assert(Array.isArray(parsed.results) && parsed.results.length > 0, "Oczekiwano niepustej listy wyników");
+                client.log("=== ZNALEZIONE WYNIKI DLA 'Słuchawki do 500zł' ===");
+                for (var k = 0; k < parsed.results.length; k++) {
+                    client.log((k + 1) + ". " + parsed.results[k].title + " | " + parsed.results[k].url);
+                }
+            }
+        }
+    });
+}
+%}
+
+###
+### 6. MCP Tools Call: Odrzucenie pustego zapytania (walidacja 1-1000 znaków)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Mcp-Session-Id: {{mcpSessionId}}
+Authorization: {{authToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "web_search",
+    "arguments": {
+      "query": "   ",
+      "max_results": 3
+    }
+  }
+}
+
+> {%
+client.test("MCP Tools Call odrzuca puste zapytanie (status HTTP 200, 400 lub 422)", function () {
+    client.assert(response.status === 200 || response.status === 400 || response.status === 422, "Oczekiwano HTTP 200/400/422, otrzymano: " + response.status);
+});
+
+if (typeof response.body === "string" && response.body.length > 0) {
+    client.test("MCP walidacja query zgłasza błąd w JSON-RPC", function () {
+        var lines = response.body.split("\n");
+        var payload = null;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.indexOf("data:") === 0) {
+                try { payload = JSON.parse(line.substring(5).trim()); break; } catch (e) {}
+            }
+        }
+        if (!payload) {
+            try { payload = JSON.parse(response.body); } catch (e) {}
+        }
+        if (payload) {
+            client.assert(payload.result?.isError === true || payload.error !== undefined, "Oczekiwano błędu walidacji dla pustego query");
+        }
+    });
+}
+%}
+
+###
+### 7. Web API Search (weryfikacja endpointu przeglądarki POST /api/search)
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{
+  "query": "SearXNG meta search",
+  "max_results": 3
+}
+
+> {%
+client.test("API przeglądarkowe /api/search zwraca wyniki", function () {
+    client.assert(response.status === 200, "Oczekiwano HTTP 200, otrzymano: " + response.status);
+    client.assert(response.body.status === "ok" || response.body.status === "empty", "Nieprawidłowy status: " + response.body.status);
+    client.assert(Array.isArray(response.body.results), "Pole results nie jest tablicą");
+});
+%}
