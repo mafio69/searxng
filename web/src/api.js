@@ -44,7 +44,8 @@ async function readErrorDetail(response) {
   try {
     const payload = await response.json();
     return typeof payload?.detail === 'string' ? payload.detail : '';
-  } catch {
+  } catch (failure) {
+    if (failure?.name === 'AbortError') throw failure;
     return '';
   }
 }
@@ -66,7 +67,8 @@ export async function search(query, maxResults, signal) {
   let data;
   try {
     data = await response.json();
-  } catch {
+  } catch (failure) {
+    if (failure?.name === 'AbortError') throw failure;
     throw new UserFacingError('Nie udało się odczytać wyników wyszukiwania.');
   }
   if (!isValidResult(data)) throw new UserFacingError('Nie udało się odczytać wyników wyszukiwania.');

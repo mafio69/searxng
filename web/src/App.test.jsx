@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App.jsx';
 import ErrorBoundary from './ErrorBoundary.jsx';
-import { formatSearchError } from './api.js';
+import { formatSearchError, search } from './api.js';
 import { HISTORY_KEY, PRIVATE_KEY, readHistory, remember } from './storage.js';
 
 const response = { source: 'searxng', results: [{ title: 'Wynik testowy', url: 'https://example.org/test', snippet: 'Opis wyniku' }] };
@@ -13,7 +13,7 @@ beforeEach(() => {
   localStorage.clear();
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => response }));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 async function submit(query = 'Pomorze') {
   const user = userEvent.setup();
@@ -23,6 +23,25 @@ async function submit(query = 'Pomorze') {
 }
 
 describe('search application', () => {
+  it('preserves cancellation while reading an error response', async () => {
+    const failure = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.reject(failure),
+    }));
+    await expect(search('query', 5)).rejects.toBe(failure);
+  });
+
+  it('preserves cancellation while reading a successful response', async () => {
+    const failure = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(failure),
+    }));
+    await expect(search('query', 5)).rejects.toBe(failure);
+  });
+
   it('renders successful empty status without a provider failure alert', async () => {
     fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: 'empty', source: null, results: [] }) });
     render(<App />); await submit();
@@ -124,8 +143,14 @@ describe('search application', () => {
     const raw = new Error('debug stack detail');
     expect(formatSearchError(raw, 'prod')).not.toContain('debug stack detail');
     expect(formatSearchError(raw, 'dev')).toContain('debug stack detail');
+    vi.stubEnv('VITE_APP_ENV', 'dev');
+    expect(formatSearchError(raw)).toContain('debug stack detail');
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     function BrokenComponent() { throw new Error('render crash detail'); }
+    render(<ErrorBoundary appEnv={import.meta.env?.VITE_APP_ENV}><BrokenComponent /></ErrorBoundary>);
+    expect(screen.getByRole('alert').textContent).toContain('render crash detail');
+    cleanup();
+    vi.stubEnv('VITE_APP_ENV', 'prod');
     render(<ErrorBoundary appEnv="prod"><BrokenComponent /></ErrorBoundary>);
     expect(screen.getByRole('alert').textContent).toContain('Błąd. Przepraszamy');
     expect(screen.getByRole('alert').textContent).not.toContain('render crash detail');
